@@ -1,0 +1,63 @@
+\begin{thebibliography}{{Xip}02}
+
+\bibitem[Bra97]{rfc2119}
+Scott Bradner.
+\newblock {\em {RFC} 2119: Key words for use in {RFC}s to Indicate Requirement
+  Levels}, March 1997.
+\newblock \url{http://www.ietf.org/rfc/rfc2119.txt}.
+
+\bibitem[CSF77]{CSF77}
+Wen-Hsiung Chen, C.~Harrison Smith, and S.~C. Fralick.
+\newblock A fast computational algorithm for the discrete cosine transform.
+\newblock {\em {IEEE} Transactions on Communications}, COM-25(9):1004--1011,
+  September 1977.
+
+\bibitem[ITU95]{rec601}
+International Telecommunications Union, 1211 Geneva 20, Switzerland.
+\newblock {\em Reccomendation {ITU-R} {BT}.601-5: Studio Encoding Parameters of
+  Digital Television for Standard 4:3 and Wide-Screen 16:9 Aspect Ratios},
+  1982, revised edition, 1995.
+
+\bibitem[ITU98]{rec470}
+International Telecommunications Union, 1211 Geneva 20, Switzerland.
+\newblock {\em Reccomendation {ITU-R} {BT}.470-6: Conventional Television
+  Systems}, 1970, revised edition, 1998.
+
+\bibitem[ITU02]{rec709}
+International Telecommunications Union, 1211 Geneva 20, Switzerland.
+\newblock {\em Recommendation {ITU-R} {BT}.709-5: Parameter values for the
+  {HDTV} standards for production and international programme exchange}, 1990,
+  revised edition, 2002.
+
+\bibitem[Mel04]{Mel04}
+Mike Melanson.
+\newblock {VP3} bitstream format and decoding process.
+\newblock \url{http://www.multimedia.cx/vp3-format.txt}, March 2004.
+
+\bibitem[Pfe03]{rfc3533}
+Silvia Pfeiffer.
+\newblock {\em {RFC} 3533: The {Ogg} Encapsulation Format Version 0}, May 2003.
+\newblock \url{http://www.ietf.org/rfc/rfc3533.txt}.
+
+\bibitem[Poy97]{Poyn97}
+Charles Poynton.
+\newblock Frequently-asked questions about gamma.
+\newblock \url{http://www.poynton.com/GammaFAQ.html}, February 1997.
+
+\bibitem[SMP94]{smpte170m}
+Society of Motion Pciture and Television Engineers.
+\newblock {\em {SMPTE-170M}: Television --- Composite Analog Video Signal ---
+  {NTSC} for Studio Applications}, 1994.
+
+\bibitem[{Xip}02]{vorbis}
+{Xiph.org Foundation}.
+\newblock {\em {Vorbis~I} specification}, 2002.
+\newblock \url{http://www.xiph.org/ogg/vorbis/doc/}.
+
+\bibitem[Yer96]{rfc2044}
+Francois Yergeau.
+\newblock {\em {RFC} 2044: {UTF}-8, a transformation format of Unicode and
+  {ISO} 10646}, October 1996.
+\newblock \url{http://www.ietf.org/rfc/rfc2044.txt}.
+
+\end{thebibliography}

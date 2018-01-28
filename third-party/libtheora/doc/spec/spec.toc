@@ -1,0 +1,233 @@
+\contentsline {chapter}{\numberline {1}Introduction}{1}{chapter.1}
+\contentsline {section}{\numberline {1.1}VP3 and Theora}{1}{section.1.1}
+\contentsline {section}{\numberline {1.2}Video Formats}{1}{section.1.2}
+\contentsline {section}{\numberline {1.3}Classification}{2}{section.1.3}
+\contentsline {section}{\numberline {1.4}Assumptions}{2}{section.1.4}
+\contentsline {section}{\numberline {1.5}Codec Setup and Probability Model}{2}{section.1.5}
+\contentsline {section}{\numberline {1.6}Format Conformance}{3}{section.1.6}
+\contentsline {chapter}{\numberline {2}Coded Video Structure}{5}{chapter.2}
+\contentsline {section}{\numberline {2.1}Frame Layout}{5}{section.2.1}
+\contentsline {section}{\numberline {2.2}Picture Region}{6}{section.2.2}
+\contentsline {section}{\numberline {2.3}Blocks and Super Blocks}{7}{section.2.3}
+\contentsline {section}{\numberline {2.4}Macro Blocks}{9}{section.2.4}
+\contentsline {section}{\numberline {2.5}Coding Modes and Prediction}{11}{section.2.5}
+\contentsline {section}{\numberline {2.6}DCT Coefficients}{11}{section.2.6}
+\contentsline {chapter}{\numberline {3}Decoding Overview}{13}{chapter.3}
+\contentsline {section}{\numberline {3.1}Decoder Configuration}{13}{section.3.1}
+\contentsline {subsection}{\numberline {3.1.1}Global Configuration}{13}{subsection.3.1.1}
+\contentsline {subsection}{\numberline {3.1.2}Quantization Matrices}{13}{subsection.3.1.2}
+\contentsline {subsection}{\numberline {3.1.3}Huffman Codebooks}{14}{subsection.3.1.3}
+\contentsline {section}{\numberline {3.2}High-Level Decode Process}{15}{section.3.2}
+\contentsline {subsection}{\numberline {3.2.1}Decoder Setup}{15}{subsection.3.2.1}
+\contentsline {paragraph}{Identification Header}{15}{section*.6}
+\contentsline {paragraph}{Comment Header}{15}{section*.7}
+\contentsline {paragraph}{Setup Header}{15}{section*.8}
+\contentsline {subsection}{\numberline {3.2.2}Decode Procedure}{15}{subsection.3.2.2}
+\contentsline {paragraph}{Packet Type Decode}{16}{section*.9}
+\contentsline {paragraph}{Frame Header Decode}{17}{section*.10}
+\contentsline {paragraph}{Coded Block Information}{17}{section*.11}
+\contentsline {paragraph}{Macro Block Mode Information}{17}{section*.12}
+\contentsline {paragraph}{Motion Vectors}{17}{section*.13}
+\contentsline {paragraph}{Block-Level {\ensuremath {\@mathit {qi}}}\ Information}{17}{section*.14}
+\contentsline {paragraph}{DCT Coefficients}{17}{section*.15}
+\contentsline {paragraph}{DC Prediction}{18}{section*.16}
+\contentsline {paragraph}{Reconstruction}{18}{section*.17}
+\contentsline {paragraph}{Loop Filtering}{19}{section*.18}
+\contentsline {chapter}{\numberline {4}Video Formats}{21}{chapter.4}
+\contentsline {section}{\numberline {4.1}Color Space Conventions}{21}{section.4.1}
+\contentsline {section}{\numberline {4.2}Color Space Conversions and Parameters}{22}{section.4.2}
+\contentsline {section}{\numberline {4.3}Available Color Spaces}{24}{section.4.3}
+\contentsline {subsection}{\numberline {4.3.1}Rec.\nobreakspace {}470M (Rec.\nobreakspace {}ITU-R\nobreakspace {}BT.470-6 System M/NTSC with Rec.\nobreakspace {}ITU-R\nobreakspace {}BT.601-5)}{24}{subsection.4.3.1}
+\contentsline {subsection}{\numberline {4.3.2}Rec.\nobreakspace {}470BG (Rec.\nobreakspace {}ITU-R\nobreakspace {}BT.470-6 Systems B and G with Rec.\nobreakspace {}ITU-R\nobreakspace {}BT.601-5)}{25}{subsection.4.3.2}
+\contentsline {section}{\numberline {4.4}Pixel Formats}{26}{section.4.4}
+\contentsline {subsection}{\numberline {4.4.1}4:4:4 Subsampling}{27}{subsection.4.4.1}
+\contentsline {subsection}{\numberline {4.4.2}4:2:2 Subsampling}{27}{subsection.4.4.2}
+\contentsline {subsection}{\numberline {4.4.3}4:2:0 Subsampling}{29}{subsection.4.4.3}
+\contentsline {subsection}{\numberline {4.4.4}Subsampling and the Picture Region}{30}{subsection.4.4.4}
+\contentsline {chapter}{\numberline {5}Bitpacking Convention}{33}{chapter.5}
+\contentsline {section}{\numberline {5.1}Overview}{33}{section.5.1}
+\contentsline {subsection}{\numberline {5.1.1}Octets and Bytes}{33}{subsection.5.1.1}
+\contentsline {subsection}{\numberline {5.1.2}Words and Byte Order}{33}{subsection.5.1.2}
+\contentsline {subsection}{\numberline {5.1.3}Bit Order}{34}{subsection.5.1.3}
+\contentsline {section}{\numberline {5.2}Coding Bits into Bytes}{34}{section.5.2}
+\contentsline {subsection}{\numberline {5.2.1}Signedness}{34}{subsection.5.2.1}
+\contentsline {subsection}{\numberline {5.2.2}Encoding Example}{35}{subsection.5.2.2}
+\contentsline {subsection}{\numberline {5.2.3}Decoding Example}{36}{subsection.5.2.3}
+\contentsline {subsection}{\numberline {5.2.4}End-of-Packet Alignment}{37}{subsection.5.2.4}
+\contentsline {subsection}{\numberline {5.2.5}Reading Zero Bit Integers}{37}{subsection.5.2.5}
+\contentsline {chapter}{\numberline {6}Bitstream Headers}{39}{chapter.6}
+\contentsline {paragraph}{VP3 Compatibility}{39}{section*.19}
+\contentsline {section}{\numberline {6.1}Common Header Decode}{39}{section.6.1}
+\contentsline {paragraph}{Input parameters:}{39}{section*.20}
+\contentsline {paragraph}{Output parameters:}{39}{section*.21}
+\contentsline {paragraph}{Variables used:}{39}{section*.22}
+\contentsline {section}{\numberline {6.2}Identification Header Decode}{40}{section.6.2}
+\contentsline {paragraph}{Input parameters:}{40}{section*.23}
+\contentsline {paragraph}{Output parameters:}{40}{section*.24}
+\contentsline {paragraph}{Variables used:}{41}{section*.25}
+\contentsline {paragraph}{VP3 Compatibility}{44}{section*.26}
+\contentsline {section}{\numberline {6.3}Comment Header}{44}{section.6.3}
+\contentsline {subsection}{\numberline {6.3.1}Comment Length Decode}{45}{subsection.6.3.1}
+\contentsline {paragraph}{Input parameters:}{45}{section*.27}
+\contentsline {paragraph}{Output parameters:}{45}{section*.28}
+\contentsline {paragraph}{Variables used:}{45}{section*.29}
+\contentsline {subsection}{\numberline {6.3.2}Comment Header Decode}{45}{subsection.6.3.2}
+\contentsline {paragraph}{Input parameters:}{45}{section*.30}
+\contentsline {paragraph}{Output parameters:}{45}{section*.31}
+\contentsline {paragraph}{Variables used:}{46}{section*.32}
+\contentsline {subsection}{\numberline {6.3.3}User Comment Format}{47}{subsection.6.3.3}
+\contentsline {paragraph}{Field Names}{47}{section*.33}
+\contentsline {section}{\numberline {6.4}Setup Header}{47}{section.6.4}
+\contentsline {subsection}{\numberline {6.4.1}Loop Filter Limit Table Decode}{48}{subsection.6.4.1}
+\contentsline {paragraph}{Input parameters:}{48}{section*.34}
+\contentsline {paragraph}{Output parameters:}{48}{section*.35}
+\contentsline {paragraph}{Variables used:}{48}{section*.36}
+\contentsline {paragraph}{VP3 Compatibility}{48}{section*.37}
+\contentsline {subsection}{\numberline {6.4.2}Quantization Parameters Decode}{48}{subsection.6.4.2}
+\contentsline {paragraph}{Input parameters:}{48}{section*.38}
+\contentsline {paragraph}{Output parameters:}{48}{section*.39}
+\contentsline {paragraph}{Variables used:}{49}{section*.40}
+\contentsline {paragraph}{VP3 Compatibility}{52}{section*.41}
+\contentsline {subsection}{\numberline {6.4.3}Computing a Quantization Matrix}{52}{subsection.6.4.3}
+\contentsline {paragraph}{Input parameters:}{52}{section*.42}
+\contentsline {paragraph}{Output parameters:}{52}{section*.43}
+\contentsline {paragraph}{Variables used:}{53}{section*.44}
+\contentsline {subsection}{\numberline {6.4.4}DCT Token Huffman Tables}{54}{subsection.6.4.4}
+\contentsline {paragraph}{Input parameters:}{54}{section*.45}
+\contentsline {paragraph}{Output parameters:}{54}{section*.46}
+\contentsline {paragraph}{Variables used:}{55}{section*.47}
+\contentsline {paragraph}{VP3 Compatibility}{56}{section*.48}
+\contentsline {subsection}{\numberline {6.4.5}Setup Header Decode}{56}{subsection.6.4.5}
+\contentsline {paragraph}{Input parameters:}{56}{section*.49}
+\contentsline {paragraph}{Output parameters:}{56}{section*.50}
+\contentsline {paragraph}{Variables used:}{57}{section*.51}
+\contentsline {chapter}{\numberline {7}Frame Decode}{59}{chapter.7}
+\contentsline {section}{\numberline {7.1}Frame Header Decode}{59}{section.7.1}
+\contentsline {paragraph}{Input parameters:}{59}{section*.52}
+\contentsline {paragraph}{Output parameters:}{59}{section*.53}
+\contentsline {paragraph}{Variables used:}{59}{section*.54}
+\contentsline {paragraph}{VP3 Compatibility}{60}{section*.55}
+\contentsline {section}{\numberline {7.2}Run-Length Encoded Bit Strings}{61}{section.7.2}
+\contentsline {subsection}{\numberline {7.2.1}Long-Run Bit String Decode}{61}{subsection.7.2.1}
+\contentsline {paragraph}{Input parameters:}{61}{section*.56}
+\contentsline {paragraph}{Output parameters:}{61}{section*.57}
+\contentsline {paragraph}{Variables used:}{61}{section*.58}
+\contentsline {paragraph}{VP3 Compatibility}{63}{section*.59}
+\contentsline {subsection}{\numberline {7.2.2}Short-Run Bit String Decode}{63}{subsection.7.2.2}
+\contentsline {paragraph}{Input parameters:}{63}{section*.60}
+\contentsline {paragraph}{Output parameters:}{63}{section*.61}
+\contentsline {paragraph}{Variables used:}{63}{section*.62}
+\contentsline {section}{\numberline {7.3}Coded Block Flags Decode}{64}{section.7.3}
+\contentsline {paragraph}{Input parameters:}{64}{section*.63}
+\contentsline {paragraph}{Output parameters:}{65}{section*.64}
+\contentsline {paragraph}{Variables used:}{65}{section*.65}
+\contentsline {section}{\numberline {7.4}Macro Block Coding Modes}{66}{section.7.4}
+\contentsline {paragraph}{Input parameters:}{66}{section*.66}
+\contentsline {paragraph}{Output parameters:}{67}{section*.67}
+\contentsline {paragraph}{Variables used:}{67}{section*.68}
+\contentsline {section}{\numberline {7.5}Motion Vectors}{69}{section.7.5}
+\contentsline {subsection}{\numberline {7.5.1}Motion Vector Decode}{69}{subsection.7.5.1}
+\contentsline {paragraph}{Input parameters:}{69}{section*.69}
+\contentsline {paragraph}{Output parameters:}{69}{section*.70}
+\contentsline {paragraph}{Variables used:}{70}{section*.71}
+\contentsline {subsection}{\numberline {7.5.2}Macro Block Motion Vector Decode}{71}{subsection.7.5.2}
+\contentsline {paragraph}{Input parameters:}{71}{section*.72}
+\contentsline {paragraph}{Output parameters:}{72}{section*.73}
+\contentsline {paragraph}{Variables used:}{72}{section*.74}
+\contentsline {paragraph}{VP3 Compatibility}{76}{section*.75}
+\contentsline {section}{\numberline {7.6}Block-Level {\ensuremath {\@mathit {qi}}}\ Decode}{76}{section.7.6}
+\contentsline {paragraph}{Input parameters:}{76}{section*.76}
+\contentsline {paragraph}{Output parameters:}{77}{section*.77}
+\contentsline {paragraph}{Variables used:}{77}{section*.78}
+\contentsline {paragraph}{VP3 Compatibility}{78}{section*.79}
+\contentsline {section}{\numberline {7.7}DCT Coefficients}{81}{section.7.7}
+\contentsline {subsection}{\numberline {7.7.1}EOB Token Decode}{81}{subsection.7.7.1}
+\contentsline {paragraph}{Input parameters:}{81}{section*.80}
+\contentsline {paragraph}{Output parameters:}{81}{section*.81}
+\contentsline {paragraph}{Variables used:}{82}{section*.82}
+\contentsline {paragraph}{VP3 Compatibility}{83}{section*.83}
+\contentsline {subsection}{\numberline {7.7.2}Coefficient Token Decode}{83}{subsection.7.7.2}
+\contentsline {paragraph}{Input parameters:}{83}{section*.84}
+\contentsline {paragraph}{Output parameters:}{84}{section*.85}
+\contentsline {paragraph}{Variables used:}{84}{section*.86}
+\contentsline {subsection}{\numberline {7.7.3}DCT Coefficient Decode}{91}{subsection.7.7.3}
+\contentsline {paragraph}{Input parameters:}{91}{section*.87}
+\contentsline {paragraph}{Output parameters:}{91}{section*.88}
+\contentsline {paragraph}{Variables used:}{92}{section*.89}
+\contentsline {section}{\numberline {7.8}Undoing DC Prediction}{94}{section.7.8}
+\contentsline {subsection}{\numberline {7.8.1}Computing the DC Predictor}{94}{subsection.7.8.1}
+\contentsline {paragraph}{Input parameters:}{94}{section*.90}
+\contentsline {paragraph}{Output parameters:}{95}{section*.91}
+\contentsline {paragraph}{Variables used:}{95}{section*.92}
+\contentsline {subsection}{\numberline {7.8.2}Inverting the DC Prediction Process}{98}{subsection.7.8.2}
+\contentsline {paragraph}{Input parameters:}{98}{section*.93}
+\contentsline {paragraph}{Output parameters:}{99}{section*.94}
+\contentsline {paragraph}{Variables used:}{99}{section*.95}
+\contentsline {section}{\numberline {7.9}Reconstruction}{100}{section.7.9}
+\contentsline {subsection}{\numberline {7.9.1}Predictors}{100}{subsection.7.9.1}
+\contentsline {subsubsection}{The Intra Predictor}{101}{section*.96}
+\contentsline {paragraph}{Input parameters:}{101}{section*.97}
+\contentsline {paragraph}{Output parameters:}{101}{section*.98}
+\contentsline {paragraph}{Variables used:}{101}{section*.99}
+\contentsline {subsubsection}{The Whole-Pixel Predictor}{101}{section*.100}
+\contentsline {paragraph}{Input parameters:}{101}{section*.101}
+\contentsline {paragraph}{Output parameters:}{102}{section*.102}
+\contentsline {paragraph}{Variables used:}{102}{section*.103}
+\contentsline {subsubsection}{The Half-Pixel Predictor}{103}{section*.104}
+\contentsline {paragraph}{Input parameters:}{103}{section*.105}
+\contentsline {paragraph}{Output parameters:}{104}{section*.106}
+\contentsline {paragraph}{Variables used:}{104}{section*.107}
+\contentsline {subsection}{\numberline {7.9.2}Dequantization}{105}{subsection.7.9.2}
+\contentsline {paragraph}{Input parameters:}{105}{section*.108}
+\contentsline {paragraph}{Output parameters:}{106}{section*.109}
+\contentsline {paragraph}{Variables used:}{106}{section*.110}
+\contentsline {subsection}{\numberline {7.9.3}The Inverse DCT}{107}{subsection.7.9.3}
+\contentsline {subsubsection}{The 1D Inverse DCT}{108}{section*.111}
+\contentsline {paragraph}{Input parameters:}{108}{section*.112}
+\contentsline {paragraph}{Output parameters:}{108}{section*.113}
+\contentsline {paragraph}{Variables used:}{108}{section*.114}
+\contentsline {subsubsection}{The 2D Inverse DCT}{112}{section*.115}
+\contentsline {paragraph}{Input parameters:}{112}{section*.116}
+\contentsline {paragraph}{Output parameters:}{112}{section*.117}
+\contentsline {paragraph}{Variables used:}{112}{section*.118}
+\contentsline {subsubsection}{The 1D Forward DCT (Non-Normative)}{113}{section*.119}
+\contentsline {paragraph}{Input parameters:}{113}{section*.120}
+\contentsline {paragraph}{Output parameters:}{113}{section*.121}
+\contentsline {paragraph}{Variables used:}{114}{section*.122}
+\contentsline {subsection}{\numberline {7.9.4}The Complete Reconstruction Algorithm}{116}{subsection.7.9.4}
+\contentsline {paragraph}{Input parameters:}{116}{section*.123}
+\contentsline {paragraph}{Output parameters:}{118}{section*.124}
+\contentsline {paragraph}{Variables used:}{119}{section*.125}
+\contentsline {section}{\numberline {7.10}Loop Filtering}{123}{section.7.10}
+\contentsline {subsection}{\numberline {7.10.1}Horizontal Filter}{123}{subsection.7.10.1}
+\contentsline {paragraph}{Input parameters:}{123}{section*.126}
+\contentsline {paragraph}{Output parameters:}{124}{section*.127}
+\contentsline {paragraph}{Variables used:}{124}{section*.128}
+\contentsline {subsection}{\numberline {7.10.2}Vertical Filter}{124}{subsection.7.10.2}
+\contentsline {paragraph}{Input parameters:}{124}{section*.129}
+\contentsline {paragraph}{Output parameters:}{125}{section*.130}
+\contentsline {paragraph}{Variables used:}{125}{section*.131}
+\contentsline {subsection}{\numberline {7.10.3}Complete Loop Filter}{126}{subsection.7.10.3}
+\contentsline {paragraph}{Input parameters:}{126}{section*.132}
+\contentsline {paragraph}{Output parameters:}{127}{section*.133}
+\contentsline {paragraph}{Variables used:}{127}{section*.134}
+\contentsline {paragraph}{VP3 Compatibility}{129}{section*.135}
+\contentsline {section}{\numberline {7.11}Complete Frame Decode}{130}{section.7.11}
+\contentsline {paragraph}{Input parameters:}{130}{section*.136}
+\contentsline {paragraph}{Output parameters:}{132}{section*.137}
+\contentsline {paragraph}{Variables used:}{133}{section*.138}
+\contentsline {chapter}{\numberline {A}Ogg Bitstream Encapsulation}{137}{appendix.A}
+\contentsline {section}{\numberline {A.1}Overview}{137}{section.A.1}
+\contentsline {subsection}{\numberline {A.1.1}MIME type}{137}{subsection.A.1.1}
+\contentsline {section}{\numberline {A.2}Embedding in a logical bitstream}{137}{section.A.2}
+\contentsline {subsection}{\numberline {A.2.1}Headers}{138}{subsection.A.2.1}
+\contentsline {subsection}{\numberline {A.2.2}Frame data}{138}{subsection.A.2.2}
+\contentsline {section}{\numberline {A.3}Multiplexed stream mapping}{138}{section.A.3}
+\contentsline {subsection}{\numberline {A.3.1}Chained streams}{138}{subsection.A.3.1}
+\contentsline {subsection}{\numberline {A.3.2}Grouped streams}{139}{subsection.A.3.2}
+\contentsline {chapter}{\numberline {B}VP3}{141}{appendix.B}
+\contentsline {section}{\numberline {B.1}VP3 Compatibility}{141}{section.B.1}
+\contentsline {section}{\numberline {B.2}Loop Filter Limit Values}{142}{section.B.2}
+\contentsline {section}{\numberline {B.3}Quantization Parameters}{142}{section.B.3}
+\contentsline {section}{\numberline {B.4}Huffman Tables}{143}{section.B.4}
+\contentsline {chapter}{\numberline {C}Colophon}{185}{appendix.C}

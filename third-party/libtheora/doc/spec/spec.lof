@@ -1,0 +1,27 @@
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\contentsline {figure}{\numberline {2.1}{\ignorespaces Location of frame and picture regions}}{6}{figure.2.1}
+\contentsline {figure}{\numberline {2.2}{\ignorespaces Subdivision of a frame into blocks and super blocks}}{7}{figure.2.2}
+\contentsline {figure}{\numberline {2.3}{\ignorespaces Raster ordering of $n\times m$ blocks}}{8}{figure.2.3}
+\contentsline {figure}{\numberline {2.4}{\ignorespaces Hilbert curve ordering of blocks within a super block}}{9}{figure.2.4}
+\contentsline {figure}{\numberline {2.5}{\ignorespaces Subdivision of a frame into macro blocks}}{10}{figure.2.5}
+\contentsline {figure}{\numberline {2.6}{\ignorespaces Hilbert curve ordering of macro blocks within a super block}}{10}{figure.2.6}
+\contentsline {figure}{\numberline {2.7}{\ignorespaces Example of reference frames for an inter frame}}{11}{figure.2.7}
+\contentsline {figure}{\numberline {2.8}{\ignorespaces Zig-zag order}}{12}{figure.2.8}
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\contentsline {figure}{\numberline {4.1}{\ignorespaces Pixels encoded 4:4:4}}{27}{figure.4.1}
+\contentsline {figure}{\numberline {4.2}{\ignorespaces Pixels encoded 4:2:2}}{28}{figure.4.2}
+\contentsline {figure}{\numberline {4.3}{\ignorespaces Pixels encoded 4:2:0}}{29}{figure.4.3}
+\contentsline {figure}{\numberline {4.4}{\ignorespaces Pixel correspondence between color planes with even picture offset and even picture size}}{31}{figure.4.4}
+\contentsline {figure}{\numberline {4.5}{\ignorespaces Pixel correspondence with even picture offset and odd picture size}}{31}{figure.4.5}
+\contentsline {figure}{\numberline {4.6}{\ignorespaces Pixel correspondence with odd picture offset and odd picture size}}{31}{figure.4.6}
+\contentsline {figure}{\numberline {4.7}{\ignorespaces Pixel correspondence with odd picture offset and even picture size}}{32}{figure.4.7}
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\contentsline {figure}{\numberline {7.1}{\ignorespaces Signal Flow Graph for the 1D Inverse DCT}}{109}{figure.7.1}
+\contentsline {figure}{\numberline {7.2}{\ignorespaces Signal Flow Graph for the 1D Forward DCT}}{114}{figure.7.2}
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\addvspace {10\p@ }

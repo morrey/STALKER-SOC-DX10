@@ -1,0 +1,100 @@
+\BOOKMARK [0][-]{chapter.1}{Introduction}{}
+\BOOKMARK [1][-]{section.1.1}{VP3 and Theora}{chapter.1}
+\BOOKMARK [1][-]{section.1.2}{Video Formats}{chapter.1}
+\BOOKMARK [1][-]{section.1.3}{Classification}{chapter.1}
+\BOOKMARK [1][-]{section.1.4}{Assumptions}{chapter.1}
+\BOOKMARK [1][-]{section.1.5}{Codec Setup and Probability Model}{chapter.1}
+\BOOKMARK [1][-]{section.1.6}{Format Conformance}{chapter.1}
+\BOOKMARK [0][-]{chapter.2}{Coded Video Structure}{}
+\BOOKMARK [1][-]{section.2.1}{Frame Layout}{chapter.2}
+\BOOKMARK [1][-]{section.2.2}{Picture Region}{chapter.2}
+\BOOKMARK [1][-]{section.2.3}{Blocks and Super Blocks}{chapter.2}
+\BOOKMARK [1][-]{section.2.4}{Macro Blocks}{chapter.2}
+\BOOKMARK [1][-]{section.2.5}{Coding Modes and Prediction}{chapter.2}
+\BOOKMARK [1][-]{section.2.6}{DCT Coefficients}{chapter.2}
+\BOOKMARK [0][-]{chapter.3}{Decoding Overview}{}
+\BOOKMARK [1][-]{section.3.1}{Decoder Configuration}{chapter.3}
+\BOOKMARK [2][-]{subsection.3.1.1}{Global Configuration}{section.3.1}
+\BOOKMARK [2][-]{subsection.3.1.2}{Quantization Matrices}{section.3.1}
+\BOOKMARK [2][-]{subsection.3.1.3}{Huffman Codebooks}{section.3.1}
+\BOOKMARK [1][-]{section.3.2}{High-Level Decode Process}{chapter.3}
+\BOOKMARK [2][-]{subsection.3.2.1}{Decoder Setup}{section.3.2}
+\BOOKMARK [2][-]{subsection.3.2.2}{Decode Procedure}{section.3.2}
+\BOOKMARK [0][-]{chapter.4}{Video Formats}{}
+\BOOKMARK [1][-]{section.4.1}{Color Space Conventions}{chapter.4}
+\BOOKMARK [1][-]{section.4.2}{Color Space Conversions and Parameters}{chapter.4}
+\BOOKMARK [1][-]{section.4.3}{Available Color Spaces}{chapter.4}
+\BOOKMARK [2][-]{subsection.4.3.1}{Rec. 470M \(Rec. ITU-R BT.470-6 System M/NTSC with Rec. ITU-R BT.601-5\)}{section.4.3}
+\BOOKMARK [2][-]{subsection.4.3.2}{Rec. 470BG \(Rec. ITU-R BT.470-6 Systems B and G with Rec. ITU-R BT.601-5\)}{section.4.3}
+\BOOKMARK [1][-]{section.4.4}{Pixel Formats}{chapter.4}
+\BOOKMARK [2][-]{subsection.4.4.1}{4:4:4 Subsampling}{section.4.4}
+\BOOKMARK [2][-]{subsection.4.4.2}{4:2:2 Subsampling}{section.4.4}
+\BOOKMARK [2][-]{subsection.4.4.3}{4:2:0 Subsampling}{section.4.4}
+\BOOKMARK [2][-]{subsection.4.4.4}{Subsampling and the Picture Region}{section.4.4}
+\BOOKMARK [0][-]{chapter.5}{Bitpacking Convention}{}
+\BOOKMARK [1][-]{section.5.1}{Overview}{chapter.5}
+\BOOKMARK [2][-]{subsection.5.1.1}{Octets and Bytes}{section.5.1}
+\BOOKMARK [2][-]{subsection.5.1.2}{Words and Byte Order}{section.5.1}
+\BOOKMARK [2][-]{subsection.5.1.3}{Bit Order}{section.5.1}
+\BOOKMARK [1][-]{section.5.2}{Coding Bits into Bytes}{chapter.5}
+\BOOKMARK [2][-]{subsection.5.2.1}{Signedness}{section.5.2}
+\BOOKMARK [2][-]{subsection.5.2.2}{Encoding Example}{section.5.2}
+\BOOKMARK [2][-]{subsection.5.2.3}{Decoding Example}{section.5.2}
+\BOOKMARK [2][-]{subsection.5.2.4}{End-of-Packet Alignment}{section.5.2}
+\BOOKMARK [2][-]{subsection.5.2.5}{Reading Zero Bit Integers}{section.5.2}
+\BOOKMARK [0][-]{chapter.6}{Bitstream Headers}{}
+\BOOKMARK [1][-]{section.6.1}{Common Header Decode}{chapter.6}
+\BOOKMARK [1][-]{section.6.2}{Identification Header Decode}{chapter.6}
+\BOOKMARK [1][-]{section.6.3}{Comment Header}{chapter.6}
+\BOOKMARK [2][-]{subsection.6.3.1}{Comment Length Decode}{section.6.3}
+\BOOKMARK [2][-]{subsection.6.3.2}{Comment Header Decode}{section.6.3}
+\BOOKMARK [2][-]{subsection.6.3.3}{User Comment Format}{section.6.3}
+\BOOKMARK [1][-]{section.6.4}{Setup Header}{chapter.6}
+\BOOKMARK [2][-]{subsection.6.4.1}{Loop Filter Limit Table Decode}{section.6.4}
+\BOOKMARK [2][-]{subsection.6.4.2}{Quantization Parameters Decode}{section.6.4}
+\BOOKMARK [2][-]{subsection.6.4.3}{Computing a Quantization Matrix}{section.6.4}
+\BOOKMARK [2][-]{subsection.6.4.4}{DCT Token Huffman Tables}{section.6.4}
+\BOOKMARK [2][-]{subsection.6.4.5}{Setup Header Decode}{section.6.4}
+\BOOKMARK [0][-]{chapter.7}{Frame Decode}{}
+\BOOKMARK [1][-]{section.7.1}{Frame Header Decode}{chapter.7}
+\BOOKMARK [1][-]{section.7.2}{Run-Length Encoded Bit Strings}{chapter.7}
+\BOOKMARK [2][-]{subsection.7.2.1}{Long-Run Bit String Decode}{section.7.2}
+\BOOKMARK [2][-]{subsection.7.2.2}{Short-Run Bit String Decode}{section.7.2}
+\BOOKMARK [1][-]{section.7.3}{Coded Block Flags Decode}{chapter.7}
+\BOOKMARK [1][-]{section.7.4}{Macro Block Coding Modes}{chapter.7}
+\BOOKMARK [1][-]{section.7.5}{Motion Vectors}{chapter.7}
+\BOOKMARK [2][-]{subsection.7.5.1}{Motion Vector Decode}{section.7.5}
+\BOOKMARK [2][-]{subsection.7.5.2}{Macro Block Motion Vector Decode}{section.7.5}
+\BOOKMARK [1][-]{section.7.6}{Block-Level qi Decode}{chapter.7}
+\BOOKMARK [1][-]{section.7.7}{DCT Coefficients}{chapter.7}
+\BOOKMARK [2][-]{subsection.7.7.1}{EOB Token Decode}{section.7.7}
+\BOOKMARK [2][-]{subsection.7.7.2}{Coefficient Token Decode}{section.7.7}
+\BOOKMARK [2][-]{subsection.7.7.3}{DCT Coefficient Decode}{section.7.7}
+\BOOKMARK [1][-]{section.7.8}{Undoing DC Prediction}{chapter.7}
+\BOOKMARK [2][-]{subsection.7.8.1}{Computing the DC Predictor}{section.7.8}
+\BOOKMARK [2][-]{subsection.7.8.2}{Inverting the DC Prediction Process}{section.7.8}
+\BOOKMARK [1][-]{section.7.9}{Reconstruction}{chapter.7}
+\BOOKMARK [2][-]{subsection.7.9.1}{Predictors}{section.7.9}
+\BOOKMARK [2][-]{subsection.7.9.2}{Dequantization}{section.7.9}
+\BOOKMARK [2][-]{subsection.7.9.3}{The Inverse DCT}{section.7.9}
+\BOOKMARK [2][-]{subsection.7.9.4}{The Complete Reconstruction Algorithm}{section.7.9}
+\BOOKMARK [1][-]{section.7.10}{Loop Filtering}{chapter.7}
+\BOOKMARK [2][-]{subsection.7.10.1}{Horizontal Filter}{section.7.10}
+\BOOKMARK [2][-]{subsection.7.10.2}{Vertical Filter}{section.7.10}
+\BOOKMARK [2][-]{subsection.7.10.3}{Complete Loop Filter}{section.7.10}
+\BOOKMARK [1][-]{section.7.11}{Complete Frame Decode}{chapter.7}
+\BOOKMARK [0][-]{appendix.A}{Ogg Bitstream Encapsulation}{}
+\BOOKMARK [1][-]{section.A.1}{Overview}{appendix.A}
+\BOOKMARK [2][-]{subsection.A.1.1}{MIME type}{section.A.1}
+\BOOKMARK [1][-]{section.A.2}{Embedding in a logical bitstream}{appendix.A}
+\BOOKMARK [2][-]{subsection.A.2.1}{Headers}{section.A.2}
+\BOOKMARK [2][-]{subsection.A.2.2}{Frame data}{section.A.2}
+\BOOKMARK [1][-]{section.A.3}{Multiplexed stream mapping}{appendix.A}
+\BOOKMARK [2][-]{subsection.A.3.1}{Chained streams}{section.A.3}
+\BOOKMARK [2][-]{subsection.A.3.2}{Grouped streams}{section.A.3}
+\BOOKMARK [0][-]{appendix.B}{VP3}{}
+\BOOKMARK [1][-]{section.B.1}{VP3 Compatibility}{appendix.B}
+\BOOKMARK [1][-]{section.B.2}{Loop Filter Limit Values}{appendix.B}
+\BOOKMARK [1][-]{section.B.3}{Quantization Parameters}{appendix.B}
+\BOOKMARK [1][-]{section.B.4}{Huffman Tables}{appendix.B}
+\BOOKMARK [0][-]{appendix.C}{Colophon}{}

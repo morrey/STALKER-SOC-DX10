@@ -1,0 +1,26 @@
+/readme.txt/1.5/Thu Aug 29 04:34:04 2002//
+D/Borland////
+D/MSVC////
+D/Reference////
+D/tools////
+/AbstractFactory.h/1.8/Sun Sep 15 12:31:18 2002//
+/AssocVector.h/1.11/Sun Sep 15 12:31:18 2002//
+/EmptyType.h/1.8/Sun Sep 15 12:31:18 2002//
+/Factory.h/1.9/Sun Sep 15 12:31:18 2002//
+/Functor.h/1.8/Sun Sep 15 12:31:18 2002//
+/HierarchyGenerators.h/1.8/Sun Sep 15 12:31:18 2002//
+/MultiMethods.h/1.8/Sun Sep 15 12:31:18 2002//
+/NullType.h/1.9/Sun Sep 15 12:31:18 2002//
+/Singleton.cpp/1.9/Sun Sep 15 12:31:18 2002//
+/Singleton.h/1.11/Sun Sep 15 12:31:18 2002//
+/SmallObj.cpp/1.9/Sun Sep 15 12:31:18 2002//
+/SmallObj.h/1.8/Sun Sep 15 12:31:18 2002//
+/SmartPtr.h/1.8/Sun Sep 15 12:31:18 2002//
+/Threads.h/1.8/Sun Sep 15 12:31:18 2002//
+/Tuple.h/1.8/Sun Sep 15 12:31:18 2002//
+/TypeInfo.h/1.8/Sun Sep 15 12:31:18 2002//
+/TypeManip.h/1.8/Sun Sep 15 12:31:18 2002//
+/TypeTraits.h/1.7/Sun Sep 15 12:31:18 2002//
+/Typelist.h/1.9/Sun Sep 15 12:31:18 2002//
+/Visitor.h/1.8/Sun Sep 15 12:31:18 2002//
+/static_check.h/1.8/Sun Sep 15 12:31:18 2002//

@@ -1,0 +1,34 @@
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\contentsline {table}{\numberline {2.1}{\ignorespaces Color Plane Indices}}{5}{table.2.1}
+\addvspace {10\p@ }
+\contentsline {table}{\numberline {3.1}{\ignorespaces Quantization Type Indices}}{14}{table.3.1}
+\addvspace {10\p@ }
+\contentsline {table}{\numberline {4.1}{\ignorespaces Rec.\nobreakspace {}470M Parameters}}{25}{table.4.1}
+\contentsline {table}{\numberline {4.2}{\ignorespaces Rec.\nobreakspace {}470BG Parameters}}{26}{table.4.2}
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\contentsline {table}{\numberline {6.3}{\ignorespaces Enumerated List of Color Spaces}}{43}{table.6.3}
+\contentsline {table}{\numberline {6.4}{\ignorespaces Enumerated List of Pixel Formats}}{43}{table.6.4}
+\contentsline {table}{\numberline {6.5}{\ignorespaces Number of Super Blocks for each Pixel Format}}{44}{table.6.5}
+\contentsline {table}{\numberline {6.6}{\ignorespaces Number of Blocks for each Pixel Format}}{44}{table.6.6}
+\contentsline {table}{\numberline {6.18}{\ignorespaces Minimum Quantization Values}}{54}{table.6.18}
+\addvspace {10\p@ }
+\contentsline {table}{\numberline {7.3}{\ignorespaces Frame Type Values}}{60}{table.7.3}
+\contentsline {table}{\numberline {7.7}{\ignorespaces Huffman Codes for Long Run Lengths}}{62}{table.7.7}
+\contentsline {table}{\numberline {7.11}{\ignorespaces Huffman Codes for Short Run Lengths}}{64}{table.7.11}
+\contentsline {table}{\numberline {7.18}{\ignorespaces Coding Modes}}{68}{table.7.18}
+\contentsline {table}{\numberline {7.19}{\ignorespaces Coding Modes}}{68}{table.7.19}
+\contentsline {table}{\numberline {7.23}{\ignorespaces Huffman Codes for Motion Vector Components}}{79}{table.7.23}
+\contentsline {table}{\numberline {7.33}{\ignorespaces EOB Token Summary}}{82}{table.7.33}
+\contentsline {table}{\numberline {7.38}{\ignorespaces Coefficient Token Summary}}{85}{table.7.38}
+\contentsline {table}{\numberline {7.42}{\ignorespaces Huffman Table Groups}}{93}{table.7.42}
+\contentsline {table}{\numberline {7.46}{\ignorespaces Reference Frames for Each Coding Mode}}{96}{table.7.46}
+\contentsline {table}{\numberline {7.47}{\ignorespaces Weights and Divisors for Each Set of Available DC Predictors}}{98}{table.7.47}
+\contentsline {table}{\numberline {7.65}{\ignorespaces 16-bit Approximations of Sines and Cosines}}{110}{table.7.65}
+\contentsline {table}{\numberline {7.75}{\ignorespaces Reference Planes and Sizes for Each \ensuremath {\@mathrm {{\ensuremath {\@mathit {rfi}}}}} and \ensuremath {\@mathrm {{\ensuremath {\@mathit {pli}}}}}}}{121}{table.7.75}
+\contentsline {table}{\numberline {7.85}{\ignorespaces Reconstructed Planes and Sizes for Each \ensuremath {\@mathrm {{\ensuremath {\@mathit {pli}}}}}}}{128}{table.7.85}
+\contentsline {table}{\numberline {7.89}{\ignorespaces Width and Height of Chroma Planes for each Pixel Format}}{135}{table.7.89}
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\addvspace {10\p@ }

@@ -1,0 +1,26 @@
+/AbstractFactory.h/1.1/Thu Aug 15 00:37:46 2002//
+/AssocVector.h/1.1/Thu Aug 15 00:37:46 2002//
+/EmptyType.h/1.1/Thu Aug 15 00:37:46 2002//
+/Factory.h/1.2/Thu Aug 15 01:01:04 2002//
+/Functor.h/1.1/Thu Aug 15 00:37:46 2002//
+/HierarchyGenerators.h/1.1/Thu Aug 15 00:37:46 2002//
+/MinMax.h/1.1/Thu Aug 15 00:37:46 2002//
+/MultiMethods.h/1.2/Thu Aug 15 01:01:04 2002//
+/NullType.h/1.2/Thu Aug 15 00:36:36 2002//
+/Singleton.cpp/1.1/Thu Aug 15 00:37:46 2002//
+/Singleton.h/1.1/Thu Aug 15 00:37:46 2002//
+/SmallObj.cpp/1.1/Thu Aug 15 00:37:46 2002//
+/SmallObj.h/1.1/Thu Aug 15 00:37:46 2002//
+/SmartPtr.h/1.1/Thu Aug 15 00:37:46 2002//
+/Threads.h/1.1/Thu Aug 15 00:37:46 2002//
+/TypeInfo.h/1.2/Thu Aug 15 00:39:30 2002//
+/TypeManip.h/1.2/Thu Aug 15 00:36:36 2002//
+/TypeTraits.h/1.2/Thu Aug 15 00:36:36 2002//
+/VC_Alignment.h/1.1/Thu Aug 15 00:37:46 2002//
+/Variant.h/1.1/Thu Aug 15 00:37:46 2002//
+/Visitor.h/1.1/Thu Aug 15 00:37:46 2002//
+/portby.txt/1.3/Thu Aug 15 01:01:04 2002//
+/readme.txt/1.1/Thu Aug 15 00:37:46 2002//
+/static_check.h/1.2/Thu Aug 15 00:36:36 2002//
+/TypeList.h/1.4/Sun Sep 15 11:34:40 2002//
+D
