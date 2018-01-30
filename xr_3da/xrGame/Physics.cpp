@@ -1,9 +1,9 @@
-#include "StdAfx.h"
+#include "stdafx.h"
 #include "PHDynamicData.h"
 #include "Physics.h"
 #include "tri-colliderknoopc/dTriList.h"
 #include "PHContactBodyEffector.h"
-#include "../gamemtllib.h"
+#include "../GameMtlLib.h"
 #include "gameobject.h"
 #include "PhysicsShellHolder.h"
 #include "PHCollideValidator.h"
@@ -263,6 +263,7 @@ IC static int CollideIntoGroup(dGeomID o1, dGeomID o2,dJointGroupID jointGroup,C
 		{
 			++collided_contacts;
 			#ifdef DEBUG
+			if( ph_dbg_draw_mask.test(phDbgDrawContacts) )
 				DBG_DrawContact(c);
 			#endif
 			dJointID contact_joint	= dJointCreateContact(0, jointGroup, &c);
@@ -272,6 +273,7 @@ IC static int CollideIntoGroup(dGeomID o1, dGeomID o2,dJointGroupID jointGroup,C
 	}
 	return collided_contacts;
 }
+
 void NearCallback(CPHObject* obj1,CPHObject* obj2, dGeomID o1, dGeomID o2)
 {	
 	
@@ -286,6 +288,7 @@ void NearCallback(CPHObject* obj1,CPHObject* obj2, dGeomID o1, dGeomID o2)
 		if(!obj2->is_active())obj2->EnableObject(obj1);
 	}
 }
+
 void CollideStatic(dGeomID o2,CPHObject* obj2)
 {
 	

@@ -9,11 +9,13 @@ class CPHShellSplitterHolder;
 #include "PHElement.h"
 #include "PHDefs.h"
 #include "PHShellSplitter.h"
-#include "PHMoveStorage.h"
+#include "phmovestorage.h"
 
-#ifdef ANIMATED_PHYSICS_OBJECT_SUPPORT
-	class CPhysicsShellAnimator;
-#endif
+
+
+
+class CPhysicsShellAnimator;
+
 
 class CPHShell: public CPhysicsShell,public CPHObject {
 
@@ -31,8 +33,13 @@ class CPHShell: public CPhysicsShell,public CPHObject {
 	CPHShellSplitterHolder	*m_spliter_holder;
 	CPHMoveStorage			m_traced_geoms;
 
-#ifdef ANIMATED_PHYSICS_OBJECT_SUPPORT
+
 	CPhysicsShellAnimator*	m_pPhysicsShellAnimatorC;
+
+private:
+
+#ifdef	DEBUG
+	virtual		CPhysicsShellHolder	*ref_object					() { return PhysicsRefObject() ;}
 #endif
 
 protected:
@@ -47,7 +54,7 @@ public:
 	static void 			BonesCallback				(CBoneInstance* B);
 	static void 			StataticRootBonesCallBack	(CBoneInstance* B);
 	virtual	BoneCallbackFun* GetBonesCallback		()	{return BonesCallback ;}
-	virtual BoneCallbackFun* GetStaticObjectBonesCallback()	{return StataticRootBonesCallBack;}
+	virtual BoneCallbackFun* GetStaticObjectBonesCallback()	{ VERIFY( false ); return StataticRootBonesCallBack; }
 	virtual	void			add_Element				(CPhysicsElement* E);
 	virtual	void			ToAnimBonesPositions	();
 	virtual bool			AnimToVelocityState		(float dt, float l_limit, float a_limit );
@@ -57,9 +64,9 @@ public:
 	virtual	void			DisableObject			();
 	virtual void			SetAirResistance		(dReal linear=default_k_l, dReal angular=default_k_w)
 	{
-        xr_vector<CPHElement*>::iterator i;
-        for (i = elements.begin(); elements.end() != i; ++i)
-            (*i)->SetAirResistance(linear, angular);
+		xr_vector<CPHElement*>::iterator i;
+		for(i=elements.begin();elements.end()!=i;++i)
+			(*i)->SetAirResistance(linear,angular);
 	}
 	virtual void			GetAirResistance		(float& linear, float& angular)
 	{
@@ -74,12 +81,11 @@ public:
 
 	virtual void			Activate				(const Fmatrix& m0, float dt01, const Fmatrix& m2,bool disable=false);
 	virtual void			Activate				(const Fmatrix &transform,const Fvector& lin_vel,const Fvector& ang_vel,bool disable=false);
-	virtual void			Activate				(bool disable=false);
+	virtual void			Activate				(bool disable=false, bool not_set_bone_callbacks = false);
 	virtual void			Activate				(const Fmatrix& start_from, bool disable=false){};
 
-#ifdef ANIMATED_PHYSICS_OBJECT_SUPPORT
+
 	virtual	CPhysicsShellAnimator*	PPhysicsShellAnimator(){return	m_pPhysicsShellAnimatorC;};
-#endif
 
 private:
 			void			activate				(bool disable);	
@@ -100,11 +106,8 @@ public:
 	virtual			void	SetRagDoll				()											;
 	virtual			void	SetIgnoreRagDoll		()											;
 
-#ifdef ANIMATED_PHYSICS_OBJECT_SUPPORT
-	virtual			void	SetAnimated				()											;
+	virtual			void	CreateShellAnimator		( CInifile* ini, LPCSTR section )											;
 	virtual			void	SetIgnoreAnimated		()											;
-	virtual			bool	Animated				()											;
-#endif
 
 	virtual			void	SetSmall				()											;
 	virtual			void	SetIgnoreSmall			()											;
@@ -117,7 +120,7 @@ public:
 	virtual void			setDensity				(float M)									;
 	virtual float			getDensity				()											;
 	virtual float			getVolume				()											;
-	virtual	void			get_Extensions			(const Fvector& axis,float center_prg,float& lo_ext, float& hi_ext);
+	virtual	void			get_Extensions			(const Fvector& axis,float center_prg,float& lo_ext, float& hi_ext) const;
 	virtual void			applyForce				(const Fvector& dir, float val)				;
 	virtual void			applyForce				(float x,float y,float z)					;
 	virtual void			applyImpulse			(const Fvector& dir, float val)				;
@@ -127,7 +130,7 @@ public:
 	virtual void			set_JointResistance		(float force)
 	{
 		JOINT_I i;
-		for (i = joints.begin(); joints.end() != i; ++i)
+		for(i=joints.begin();joints.end() != i;++i)
 		{
 			(*i)->SetForce(force);
 			(*i)->SetVelocity();
@@ -138,11 +141,13 @@ public:
 	virtual		void				set_DynamicScales				(float l_scale=default_l_scale,float w_scale=default_w_scale);
 	virtual		void				set_ContactCallback				(ContactCallbackFun* callback);
 	virtual		void				set_ObjectContactCallback		(ObjectContactCallbackFun* callback);
+	virtual		void				SetAnimated						( bool v );
 	virtual		void				add_ObjectContactCallback		(ObjectContactCallbackFun* callback);
 	virtual		void				remove_ObjectContactCallback		(ObjectContactCallbackFun* callback);
 	virtual		void				set_CallbackData				(void * cd);
 	virtual		void				*get_CallbackData				();
 	virtual		void				set_PhysicsRefObject			(CPhysicsShellHolder* ref_object);
+				CPhysicsShellHolder*PhysicsRefObject				(){ return (*elements.begin())->PhysicsRefObject(); }
 	
 	//breakbable interface
 	virtual		bool				isBreakable						();
@@ -153,8 +158,8 @@ public:
 	virtual		void				UnblockBreaking					(){if(m_spliter_holder)m_spliter_holder->SetBreakable();}
 	virtual		bool				IsBreakingBlocked				(){return m_spliter_holder&&m_spliter_holder->IsUnbreakable();}
 	///////	////////////////////////////////////////////////////////////////////////////////////////////
-	virtual		void				get_LinearVel					(Fvector& velocity);
-	virtual		void				get_AngularVel					(Fvector& velocity);
+	virtual		void				get_LinearVel					(Fvector& velocity) const ;
+	virtual		void				get_AngularVel					(Fvector& velocity) const ;
 	virtual		void				set_LinearVel					(const Fvector& velocity);
 	virtual		void				set_AngularVel					(const Fvector& velocity);
 	virtual		void				TransformPosition				(const Fmatrix &form);
@@ -167,12 +172,14 @@ public:
 	virtual		CPhysicsElement		*get_Element					(u16 bone_id);
 	virtual		CPhysicsElement		*get_Element					(const shared_str & bone_name);
 	virtual		CPhysicsElement		*get_Element					(LPCSTR bone_name);
+	virtual	const CPhysicsElement	*get_ElementByStoreOrder		(u16 num) const;
 	virtual		CPhysicsElement		*get_ElementByStoreOrder		(u16 num);
-	virtual		u16					get_ElementsNumber				(){return (u16)elements.size();}
+				CPhysicsElement		*get_PhysicsParrentElement		( u16 bone_id );
+	virtual		u16					get_ElementsNumber				()const{return (u16)elements.size();}
 	virtual		CPHSynchronize		*get_ElementSync				(u16 element);
 	virtual		u16					get_elements_number				(){return get_ElementsNumber();}
 	virtual		CPHSynchronize		*get_element_sync				(u16 element){return get_ElementSync(element);}
-	virtual		CPhysicsElement		*NearestToPoint					(const Fvector& point);
+	virtual		CPhysicsElement		*NearestToPoint					(const Fvector& point, NearestToPointCallback *cb = 0 );
 	virtual		CPhysicsJoint		*get_Joint						(u16 bone_id);
 	virtual		CPhysicsJoint		*get_Joint						(const shared_str & bone_name);
 	virtual		CPhysicsJoint		*get_Joint						(LPCSTR bone_name);
@@ -186,9 +193,9 @@ public:
 	virtual		void				EnableCollision					();
 	virtual		void				DisableCharacterCollision		();
 	virtual		void				SetRemoveCharacterCollLADisable	(){m_flags.set(flRemoveCharacterCollisionAfterDisable,TRUE);}
-	virtual		bool				isEnabled						(){return CPHObject::is_active();}
-	virtual		bool				isActive						(){return !!m_flags.test(flActive);}
-	virtual		bool				isFullActive					(){return isActive()&&!m_flags.test(flActivating);}	
+	virtual		bool				isEnabled						()const {return CPHObject::is_active();}
+	virtual		bool				isActive						()const {return !!m_flags.test(flActive);}
+	virtual		bool				isFullActive					()const {return isActive()&&!m_flags.test(flActivating);}	
 				void				SetNotActivating				(){m_flags.set(flActivating,FALSE);}
 //CPHObject	 
 	virtual		void				vis_update_activate				();
@@ -211,21 +218,27 @@ public:
 	virtual		void                ZeroCallbacks					();
 	virtual		void				ResetCallbacks					(u16 id,Flags64 &mask);
 				void				PlaceBindToElForms				();
-	virtual		void				SetCallbacks					(BoneCallbackFun* callback);
+	virtual		void				SetCallbacks					( );
 	virtual		void				EnabledCallbacks				(BOOL val);
 	virtual		void				set_DisableParams				(const SAllDDOParams& params);
 	virtual		void				UpdateRoot						();
 	virtual		void				SmoothElementsInertia			(float k);
 	virtual		void				InterpolateGlobalTransform		(Fmatrix* m);
 	virtual		void				InterpolateGlobalPosition		(Fvector* v);
-	virtual		void				GetGlobalTransformDynamic		(Fmatrix* m);
+	virtual		void				GetGlobalTransformDynamic		(Fmatrix* m) ;
 	virtual		void				GetGlobalPositionDynamic		(Fvector* v);
 	virtual		Fmatrix&			ObjectInRoot					(){return m_object_in_root;}
 	virtual		void				ObjectToRootForm				(const Fmatrix& form);
 	virtual		dSpaceID			dSpace							(){return m_space;}
 	virtual		void				SetTransform					(const Fmatrix& m0);
+
 	virtual		void				AddTracedGeom					(u16 element=0,u16 geom=0);
 	virtual		void				SetAllGeomTraced				();
+
+	virtual		void				ClearTracedGeoms				();
+	virtual		void				DisableGeomTrace				();
+	virtual		void				EnableGeomTrace					();
+
 	virtual		void				SetPrefereExactIntegration		();
 	virtual		void				CutVelocity						(float l_limit,float a_limit);
 ///////////	//////////////////////////////////////////////////////////////////////////////////////////
@@ -261,5 +274,13 @@ private:
 				void				ReanableObject					()																				;
 				void				ExplosionHit					(const Fvector& pos, const Fvector& dir, float val,const u16 id)				;
 				void				ClearBreakInfo					();
+				Fmatrix&			get_animation_root_matrix		( Fmatrix& m );
+				void				update_root_transforms			();
+IC				CPHElement			&root_element					() { VERIFY( !elements.empty() ); return *(*elements.begin()); }
+#ifdef		DEBUG
+	virtual		void				dbg_draw_velocity				( float scale, u32 color );
+	virtual		void				dbg_draw_force					( float scale, u32 color );
+	virtual		void				dbg_draw_geometry				( float scale, u32 color, Flags32 flags = Flags32().assign( 0 ) ) const			;
+#endif
 };
 #endif

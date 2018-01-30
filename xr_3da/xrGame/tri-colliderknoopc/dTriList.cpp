@@ -1,13 +1,10 @@
 #include "stdafx.h"
-
 #include "dTriCollideK.h"
 #include "dxTriList.h"
 #include "dcTriListCollider.h"
 #include "../ExtendedGeom.h"
 #include "dcTriListCollider.cpp"	// Allow inlining
 #include "../gameobject.h"
-
-
 
 int dTriListClass = -1;
 
@@ -209,7 +206,7 @@ dxGeom* dCreateTriList(dSpaceID space, dTriCallback* Callback, dTriArrayCallback
 
 	Data->ArrayCallback = ArrayCallback;
 
-	Data->Collider = xr_new<dcTriListCollider>(g);
+	Data->Collider = new dcTriListCollider(g);
 
 
 

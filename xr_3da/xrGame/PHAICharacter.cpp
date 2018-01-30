@@ -10,9 +10,9 @@
 #include "phaicharacter.h"
 
 #ifdef DEBUG
-#	include "../StatGraph.h"
+#	include <xrEngine/StatGraph.h>
 #	include "PHDebug.h"
-#	include "level.h"
+#	include "Level.h"
 #	include "debug_renderer.h"
 #endif
 
@@ -23,6 +23,7 @@ CPHAICharacter::CPHAICharacter()
 void CPHAICharacter::Create(dVector3 sizes)
 {
 	inherited::Create(sizes);
+	
 	m_forced_physics_control=false;//.
 }
 bool CPHAICharacter::TryPosition(Fvector pos,bool exact_state){
@@ -101,15 +102,16 @@ bool CPHAICharacter::TryPosition(Fvector pos,bool exact_state){
 	m_collision_damage_info.m_contact_velocity=0.f;
 	return ret;
 }
-
-void CPHAICharacter::		SetPosition							(Fvector pos)	
+/*
+void CPHAICharacter::		SetPosition	(const Fvector &pos)	
 {
-	m_vDesiredPosition.set(pos);
+	//m_vDesiredPosition.set(pos);
 	inherited::SetPosition(pos);
 
 }
-
-void CPHAICharacter::BringToDesired(float time,float velocity,float /**force/**/)
+*/
+/*
+void CPHAICharacter::BringToDesired(float time,float velocity,float force)
 {
 	Fvector pos,move;
 	GetPosition(pos);
@@ -149,7 +151,7 @@ void CPHAICharacter::BringToDesired(float time,float velocity,float /**force/**/
 	SetAcceleration(move);
 }
 
-
+*/
 
 void	CPHAICharacter::Jump(const Fvector& jump_velocity)
 {
@@ -180,6 +182,13 @@ void CPHAICharacter::InitContact(dContact* c,bool	&do_collide,u16 material_idx_1
 	if(ph_dbg_draw_mask.test(phDbgNeverUseAiPhMove))do_collide=false;
 #endif
 }
+/*
+EEnvironment CPHAICharacter::CheckInvironment()
+{
+
+	return inherited::CheckInvironment();
+}
+*/
 #ifdef DEBUG
 void	CPHAICharacter::OnRender()	
 {

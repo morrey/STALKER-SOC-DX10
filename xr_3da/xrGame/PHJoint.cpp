@@ -1,13 +1,13 @@
-#include "StdAfx.h"
+#include "stdafx.h"
 #include "PHDynamicData.h"
 #include "Physics.h"
 #include "tri-colliderknoopc/dTriList.h"
 #include "PHJointDestroyInfo.h"
 ///////////////////////////////////////////////////////////////
 ///#pragma warning(disable:4995)
-////#include "../ode/src/collision_kernel.h"
-//#include <../ode/src/joint.h>
-//#include <../ode/src/objects.h>
+////#include "ode/src/collision_kernel.h"
+//#include "ode/src/joint.h"
+//#include "ode/src/objects.h"
 
 //#pragma warning(default:4995)
 ///////////////////////////////////////////////////////////////////
@@ -266,17 +266,17 @@ void CPHJoint::CreateSlider()
 	CalcAxis(0,axis,lo,hi,first_matrix,second_matrix,rotate);
 	//if(body1)axis.invert();//SwapLimits(lo,hi);!!!
 
- 	dJointSetSliderAxis(m_joint, axis.x, axis.y, axis.z);
+ 	dJointSetSliderAxis(m_joint, -axis.x, -axis.y, -axis.z);
 	
-	dJointSetSliderParam(m_joint,dParamLoStop ,lo);
-	dJointSetSliderParam(m_joint,dParamHiStop ,hi);
+	dJointSetSliderParam( m_joint, dParamLoStop, axes[0].low );
+	dJointSetSliderParam( m_joint, dParamHiStop, axes[0].high );
 
 	if(!(axes[0].force<0.f)){
-		dJointSetSliderParam(m_joint,dParamFMax ,axes[0].force);
-		dJointSetSliderParam(m_joint,dParamVel ,axes[0].velocity);
+		dJointSetSliderParam( m_joint,dParamFMax, axes[0].force );
+		dJointSetSliderParam( m_joint,dParamVel, axes[0].velocity );
 	}
-	dJointSetSliderParam(m_joint,dParamStopERP ,axes[0].erp);
-	dJointSetSliderParam(m_joint,dParamStopCFM ,axes[0].cfm);
+	dJointSetSliderParam( m_joint, dParamStopERP ,axes[0].erp );
+	dJointSetSliderParam( m_joint, dParamStopCFM ,axes[0].cfm );
 
 	//axis 1
 
@@ -1253,7 +1253,7 @@ CPhysicsElement* CPHJoint::PSecond_element()
 }
 void CPHJoint::SetBreakable(float force,float torque)
 {
-	if(!m_destroy_info)	m_destroy_info=xr_new<CPHJointDestroyInfo>(force,torque);
+	if(!m_destroy_info)	m_destroy_info= new CPHJointDestroyInfo(force,torque);
 }
 
 void CPHJoint::SetShell(CPHShell* p)

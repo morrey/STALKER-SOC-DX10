@@ -21,7 +21,6 @@
 #endif
 
 #include "../xrRender/Kinematics.h"
-
 /*
 [impulse_transition_to_parts]
 random_min              =1       ; х массу объекта = величина случайно направленного импульса 
@@ -89,7 +88,7 @@ void CPHDestroyable::InitServerObject(CSE_Abstract* D)
 	//	l_tpALifePhysicObject->startup_animation=m_startup_anim;
 	
 	D->set_name_replace	("");
-	D->s_gameid			=	u8(GameID());
+//.	D->s_gameid			=	u8(GameID());
 	D->s_RP				=	0xff;
 	D->ID				=	0xffff;
 
@@ -212,13 +211,13 @@ void CPHDestroyable::SheduleUpdate(u32 dt)
 
 void CPHDestroyable::NotificatePart(CPHDestroyableNotificate *dn)
 {
-	CPhysicsShell	*own_shell = PPhysicsShellHolder()->PPhysicsShell();
-	CPhysicsShell	*new_shell = dn->PPhysicsShellHolder()->PPhysicsShell();
-	IKinematics		*own_K = smart_cast<IKinematics*>(PPhysicsShellHolder()->Visual());
-	IKinematics		*new_K = smart_cast<IKinematics*>(dn->PPhysicsShellHolder()->Visual());
-	VERIFY(own_K&&new_K&&own_shell&&new_shell);
-	CInifile		*own_ini = own_K->LL_UserData();
-	CInifile		*new_ini = new_K->LL_UserData();;
+	CPhysicsShell	*own_shell=PPhysicsShellHolder()->PPhysicsShell()			;
+	CPhysicsShell	*new_shell=dn->PPhysicsShellHolder()->PPhysicsShell()		;
+	IKinematics		*own_K =smart_cast<IKinematics*>(PPhysicsShellHolder()->Visual());
+	IKinematics		*new_K =smart_cast<IKinematics*>(dn->PPhysicsShellHolder()->Visual())	;
+	VERIFY			(own_K&&new_K&&own_shell&&new_shell)						;
+	CInifile		*own_ini  =own_K->LL_UserData()								;
+	CInifile		*new_ini  =new_K->LL_UserData()								;
 	//////////////////////////////////////////////////////////////////////////////////	
 	Fmatrix			own_transform;
 	own_shell		->GetGlobalTransformDynamic		(&own_transform)			;

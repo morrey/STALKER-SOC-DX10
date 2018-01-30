@@ -4,8 +4,12 @@
 #include "PHDynamicData.h"
 #include "Physics.h"
 #include "ExtendedGeom.h"
+#include "physicsshellholder.h"
+
 #include "../cl_intersect.h"
-#include "tri-colliderKNoOPC\__aabb_tri.h"
+#include "../GameMtlLib.h"
+
+#include "tri-colliderKNoOPC/__aabb_tri.h"
 #include "../../xrODE/ode/src/util.h"
 
 CPHCharacter::CPHCharacter(void):
@@ -22,7 +26,8 @@ m_mean_y		  				=0.f					;
 m_new_restriction_type=m_restriction_type				=rtNone					;
 b_actor_movable					=true					;
 p_lastMaterialIDX				=&lastMaterialIDX		;
-lastMaterialIDX					=u16(-1)				;
+lastMaterialIDX					=GAMEMTL_NONE_IDX		;
+injuriousMaterialIDX			=GAMEMTL_NONE_IDX		;
 m_creation_step					=u64(-1)				;
 b_in_touch_resrtrictor			=false					;
 m_current_object_radius			=-1.f					;
@@ -148,3 +153,21 @@ void CPHCharacter::CutVelocity(float l_limit,float /*a_limit*/)
 	}
 }
 
+const	Fmatrix&	CPHCharacter::XFORM				()							const
+{
+	return m_phys_ref_object->XFORM();//>renderable.xform;
+}
+void			CPHCharacter::get_LinearVel		( Fvector& velocity )		const
+{
+	GetVelocity( velocity );
+
+}
+void			CPHCharacter::get_AngularVel		( Fvector& velocity )		const		
+{
+	velocity.set(0,0,0);
+}
+
+const	Fvector	&CPHCharacter::mass_Center		()							const			
+{
+	return	cast_fv( dBodyGetLinearVel(m_body) );
+}

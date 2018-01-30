@@ -1,9 +1,11 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////
-#include "StdAfx.h"
+#include "stdafx.h"
+
+#include "PHCapture.h"
 #include "phcharacter.h"
 #include "Physics.h"
 #include "ExtendedGeom.h"
-#include "PHCapture.h"
+
 #include "entity_alive.h"
 #include "phmovementcontrol.h"
 #include "../xrRender/Kinematics.h"
@@ -25,14 +27,24 @@ void CPHCapture::CreateBody()
 
 CPHCapture::~CPHCapture()
 {
-	
 	Deactivate();
 }
+
+bool CPHCapture::Invalid()
+{
+	return 
+		!m_taget_object->PPhysicsShell()||
+		!m_taget_object->PPhysicsShell()->isActive()||
+		!m_character->b_exist;
+}
+
 void CPHCapture::PhDataUpdate(dReal /**step/**/)
 {
-	if(b_failed) return;
+
 	switch(e_state) 
 	{
+	case cstFree:  
+		break;
 	case cstPulling:  PullingUpdate();
 		break;
 	case cstCaptured: CapturedUpdate();
@@ -45,13 +57,24 @@ void CPHCapture::PhDataUpdate(dReal /**step/**/)
 
 void CPHCapture::PhTune(dReal /**step/**/)
 {
-	if(b_failed) return;
+	if(e_state == cstFree)
+		return;
+
 	//if(!m_taget_object->PPhysicsShell())	{
 	//	b_failed=true;
 	//	return;			//. hack
 	//}
+	VERIFY(m_character && m_character->b_exist);
+	VERIFY(m_taget_object);
+	VERIFY(m_taget_object->PPhysicsShell());
+	VERIFY(m_taget_object->PPhysicsShell()->isFullActive());
+	VERIFY( m_taget_element );
+	VERIFY( m_taget_element->isFullActive());
+	VERIFY( m_island.DActiveIsland() == &m_island );
+
 	bool act_capturer=m_character->CPHObject::is_active();
 	bool act_taget=m_taget_object->PPhysicsShell()->isEnabled();
+	
 	b_disabled=!act_capturer&&!act_taget;
 	if(act_capturer)
 	{
@@ -72,6 +95,7 @@ void CPHCapture::PhTune(dReal /**step/**/)
 				{
 					m_character->Island().Merge(&m_island);
 					m_taget_element->PhysicsShell()->PIsland()->Merge(&m_island);
+					VERIFY(!m_island.IsActive());
 				}
 		}
 		break;
@@ -79,7 +103,7 @@ void CPHCapture::PhTune(dReal /**step/**/)
 		break;
 	default: NODEFAULT;
 	}
-
+	
 }
 
 void CPHCapture::PullingUpdate()
@@ -212,6 +236,9 @@ void CPHCapture::PullingUpdate()
 
 		//dJointSetAMotorParam(m_ajoint,dParamLoStop ,0.f);
 		//dJointSetAMotorParam(m_ajoint,dParamHiStop ,0.f);	
+		m_taget_element->set_LinearVel ( Fvector().set( 0 ,0, 0 ) );
+		m_taget_element->set_AngularVel( Fvector().set( 0 ,0, 0 ) );
+
 
 		m_taget_element->set_DynamicLimits();
 		//m_taget_object->PPhysicsShell()->set_JointResistance()
@@ -257,7 +284,7 @@ void CPHCapture::ReleasedUpdate()
 	if(b_disabled) return;
 	if(!b_collide) 
 	{
-		b_failed=true;
+		e_state=cstFree;
 		m_taget_element->Enable();
 	}
 	b_collide=false;
@@ -316,10 +343,18 @@ void CPHCapture::object_contactCallbackFun(bool& do_colide,bool bo1,dContact& c,
 
 	}
 }
-void CPHCapture::net_Relcase(CObject* O)
+void CPHCapture::RemoveConnection(CObject* O)
 {
 	if(static_cast<CObject*>(m_taget_object)==O)
 	{
 		Deactivate();
 	}
+}
+
+void	CPHCapture::NetRelcase		(CPhysicsShell *s)
+{
+	VERIFY( s );
+	VERIFY( s->get_ElementByStoreOrder(0) );
+	VERIFY( s->get_ElementByStoreOrder(0)->PhysicsRefObject() );
+	RemoveConnection(s->get_ElementByStoreOrder(0)->PhysicsRefObject());
 }

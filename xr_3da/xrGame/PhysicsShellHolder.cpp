@@ -13,11 +13,47 @@
 #include "phworld.h"
 #include "phactivationshape.h"
 #include "phvalide.h"
+#include "characterphysicssupport.h"
+#include "phmovementcontrol.h"
+#include "physics_shell_animated.h"
+
+#include "../iphysicsshell.h"
+
 CPhysicsShellHolder::CPhysicsShellHolder()
 {
 	init();
 }
 
+const IObjectPhysicsCollision*CPhysicsShellHolder::physics_collision	()
+{
+	CCharacterPhysicsSupport	*char_support = character_physics_support();
+	if( char_support )
+		char_support->create_animation_collision();
+	return this;
+}
+const IPhysicsShell	*CPhysicsShellHolder::physics_shell() const	
+{
+	if( m_pPhysicsShell )
+		return m_pPhysicsShell;
+	const CCharacterPhysicsSupport	*char_support = character_physics_support();
+	if( !char_support || !char_support->animation_collision() )
+				return 0;
+	return  char_support->animation_collision()->shell(); 
+}
+
+IPhysicsShell* CPhysicsShellHolder::physics_shell()
+{
+	return  m_pPhysicsShell; 
+}
+const IPhysicsElement* CPhysicsShellHolder::physics_character()  const
+{
+	const CCharacterPhysicsSupport	*char_support = character_physics_support();
+	if( !char_support )
+				return 0;
+	const CPHMovementControl		*mov		  = character_physics_support()->movement();
+	VERIFY( mov );
+	return mov->IElement();
+}
 void CPhysicsShellHolder::net_Destroy()
 {
 	//remove calls
@@ -48,6 +84,7 @@ BOOL CPhysicsShellHolder::net_Spawn				(CSE_Abstract*	DC)
 	if(PPhysicsShell()&&PPhysicsShell()->isFullActive())
 	{
 		PPhysicsShell()->GetGlobalTransformDynamic(&XFORM());
+		PPhysicsShell()->mXFORM = XFORM();
 		switch (EEnableState(st_enable_state))
 		{
 		case stEnable		:	PPhysicsShell()->Enable()	;break;
@@ -60,17 +97,17 @@ BOOL CPhysicsShellHolder::net_Spawn				(CSE_Abstract*	DC)
 	return ret;
 }
 
-void	CPhysicsShellHolder::PHHit(float P,Fvector &dir, CObject *who,s16 element,Fvector p_in_object_space, float impulse, ALife::EHitType hit_type /* ALife::eHitTypeWound*/)
+void	CPhysicsShellHolder::PHHit( SHit &H )
 {
-	if(impulse>0)
-		if(m_pPhysicsShell) m_pPhysicsShell->applyHit(p_in_object_space,dir,impulse,element,hit_type);
+	if(H.phys_impulse() >0)
+		if(m_pPhysicsShell) m_pPhysicsShell->applyHit(H.bone_space_position(),H.direction(),H.phys_impulse(),H.bone(),H.type());
 }
 
 //void	CPhysicsShellHolder::Hit(float P, Fvector &dir, CObject* who, s16 element,
 //						 Fvector p_in_object_space, float impulse, ALife::EHitType hit_type)
 void	CPhysicsShellHolder::Hit					(SHit* pHDS)
 {
-	PHHit(pHDS->damage(),pHDS->dir,pHDS->who,pHDS->boneID,pHDS->p_in_bone_space,pHDS->impulse,pHDS->hit_type);
+	PHHit(*pHDS);
 }
 
 void CPhysicsShellHolder::create_physic_shell	()
@@ -86,13 +123,37 @@ void CPhysicsShellHolder::init			()
 	m_pPhysicsShell				=	NULL		;
 	b_sheduled					=	false		;
 }
+bool	 CPhysicsShellHolder::has_shell_collision_place( const CPhysicsShellHolder* obj ) const
+{
+	if(character_physics_support())
+			return character_physics_support()->has_shell_collision_place( obj );
+	return false;
+}
+void	CPhysicsShellHolder::on_child_shell_activate ( CPhysicsShellHolder* obj )
+{
+	
+	if(character_physics_support())
+		character_physics_support()->on_child_shell_activate ( obj );
+
+}
 void CPhysicsShellHolder::correct_spawn_pos()
 {
 	VERIFY								(PPhysicsShell());
+	
+	if( H_Parent() )
+	{
+		CPhysicsShellHolder	* P = smart_cast<CPhysicsShellHolder*>(H_Parent());
+		if( P && P->has_shell_collision_place(this) )
+			return;
+	}
 
 	Fvector								size;
 	Fvector								c;
 	get_box								(PPhysicsShell(),XFORM(),size,c);
+
+	R_ASSERT2( _valid( c ), make_string( "object: %s model: %s ", cName().c_str(), cNameVisual().c_str() ) );
+	R_ASSERT2( _valid( size ), make_string( "object: %s model: %s ", cName().c_str(), cNameVisual().c_str() ) );
+	R_ASSERT2( _valid( XFORM() ), make_string( "object: %s model: %s ", cName().c_str(), cNameVisual().c_str() ) );
 
 	CPHActivationShape					activation_shape;
 	activation_shape.Create				(c,size,this);
@@ -107,7 +168,7 @@ void CPhysicsShellHolder::correct_spawn_pos()
 //		activation_shape.Activate		(size,1,1.f,M_PI/8.f);
 ////		VERIFY							(valid_pos(activation_shape.Position(),phBoundaries));
 //	}
-
+	
 	PPhysicsShell()->EnableCollision	();
 
 	Fvector								ap = activation_shape.Position();
@@ -150,10 +211,10 @@ void CPhysicsShellHolder::activate_physic_shell()
 	if(H_Parent()&&H_Parent()->Visual())
 	{
 		smart_cast<IKinematics*>(H_Parent()->Visual())->CalculateBones_Invalidate	();
-		smart_cast<IKinematics*>(H_Parent()->Visual())->CalculateBones	();
+		smart_cast<IKinematics*>(H_Parent()->Visual())->CalculateBones	(TRUE);
 	}
 	smart_cast<IKinematics*>(Visual())->CalculateBones_Invalidate	();
-	smart_cast<IKinematics*>(Visual())->CalculateBones();
+	smart_cast<IKinematics*>(Visual())->CalculateBones(TRUE);
 	if(!IsGameTypeSingle())
 	{
 		if(!smart_cast<CCustomRocket*>(this)&&!smart_cast<CGrenade*>(this)) PPhysicsShell()->SetIgnoreDynamic();
@@ -161,8 +222,17 @@ void CPhysicsShellHolder::activate_physic_shell()
 //	XFORM().set					(l_p1);
 	correct_spawn_pos();
 
-m_pPhysicsShell->set_LinearVel(l_fw);
+	m_pPhysicsShell->set_LinearVel(l_fw);
 	m_pPhysicsShell->GetGlobalTransformDynamic(&XFORM());
+
+	if(H_Parent()&&H_Parent()->Visual())
+	{
+		smart_cast<IKinematics*>(H_Parent()->Visual())->CalculateBones_Invalidate	();
+		smart_cast<IKinematics*>(H_Parent()->Visual())->CalculateBones	(TRUE);
+	}
+	CPhysicsShellHolder* P = smart_cast<CPhysicsShellHolder*>( H_Parent() );
+	if( P )
+		P->on_child_shell_activate( this );
 }
 
 void CPhysicsShellHolder::setup_physic_shell	()
@@ -171,15 +241,14 @@ void CPhysicsShellHolder::setup_physic_shell	()
 	create_physic_shell			();
 	m_pPhysicsShell->Activate	(XFORM(),0,XFORM());
 	smart_cast<IKinematics*>(Visual())->CalculateBones_Invalidate	();
-	smart_cast<IKinematics*>(Visual())->CalculateBones();
+	smart_cast<IKinematics*>(Visual())->CalculateBones(TRUE);
+	correct_spawn_pos();
 	m_pPhysicsShell->GetGlobalTransformDynamic(&XFORM());
 }
 
 void CPhysicsShellHolder::deactivate_physics_shell()
 {
-	if (m_pPhysicsShell)
-		m_pPhysicsShell->Deactivate	();
-	xr_delete(m_pPhysicsShell);
+	destroy_physics_shell( m_pPhysicsShell );
 }
 void CPhysicsShellHolder::PHSetMaterial(u16 m)
 {
@@ -375,7 +444,7 @@ void CPhysicsShellHolder::on_physics_disable()
 	if (IsGameTypeSingle())
 		return;
 
-	NET_Packet			net_packet;
+	/*NET_Packet			net_packet;
 	u_EventGen			(net_packet,GE_FREEZE_OBJECT,ID());
-	Level().Send		(net_packet,net_flags(TRUE,TRUE));
+	Level().Send		(net_packet,net_flags(TRUE,TRUE));*/
 }

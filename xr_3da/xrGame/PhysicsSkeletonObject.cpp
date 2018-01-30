@@ -23,7 +23,7 @@ BOOL CPhysicsSkeletonObject::net_Spawn(CSE_Abstract* DC)
 
 	inherited::net_Spawn	(DC);
 	xr_delete(collidable.model);
-	collidable.model = xr_new<CCF_Skeleton>(this);
+	collidable.model = new CCF_Skeleton(this);
 	CPHSkeleton::Spawn(e);
 	setVisible(TRUE);
 	setEnabled(TRUE);
@@ -39,7 +39,7 @@ void	CPhysicsSkeletonObject::SpawnInitPhysics	(CSE_Abstract	*D)
 	if(K)	
 	{	
 		K->CalculateBones_Invalidate();
-		K->CalculateBones	();
+		K->CalculateBones	(TRUE);
 	}
 }
 

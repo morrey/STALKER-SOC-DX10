@@ -721,7 +721,7 @@ void CAI_Stalker::UpdateCL()
 
 void CAI_Stalker ::PHHit				(float P,Fvector &dir, CObject *who,s16 element,Fvector p_in_object_space, float impulse, ALife::EHitType hit_type /*ALife::eHitTypeWound*/)
 {
-	m_pPhysics_support->in_Hit(P,dir,who,element,p_in_object_space,impulse,hit_type,!g_Alive());
+	m_pPhysics_support->in_Hit(SHit(P,dir,who,element,p_in_object_space,impulse,hit_type),!g_Alive());
 }
 
 CPHDestroyable*		CAI_Stalker::		ph_destroyable	()						

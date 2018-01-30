@@ -42,7 +42,7 @@ class CObjectContactCallback
 		}
 		else
 		{
-			next=xr_new<CObjectContactCallback>(c);
+			next= new CObjectContactCallback(c);
 		}
 	}
 	bool	HasCallback(ObjectContactCallbackFun		*c)
@@ -153,6 +153,21 @@ IC dxGeomUserData* retrieveGeomUserData(dGeomID geom)
 			//	return dGeomGetUserData(geom);
 }
 
+IC void	get_user_data( dxGeomUserData* &gd1, dxGeomUserData* &gd2, bool bo1, const dContactGeom &geom )
+{
+
+	if( bo1 )
+	{
+		gd1 =retrieveGeomUserData( geom.g1 );
+		gd2 =retrieveGeomUserData( geom.g2 );
+	}
+	else
+	{
+		gd2 =retrieveGeomUserData( geom.g1 );
+		gd1 =retrieveGeomUserData( geom.g2 );
+	}
+}
+
 IC CPhysicsShellHolder* retrieveRefObject(dGeomID geom)
 {
 	dxGeomUserData* ud=dGeomGetUserData(retrieveGeom(geom));
@@ -162,7 +177,7 @@ IC CPhysicsShellHolder* retrieveRefObject(dGeomID geom)
 IC void dGeomCreateUserData(dxGeom* geom)
 {
 	if(!geom) return;
-	dGeomSetData(geom,xr_new<dxGeomUserData>());
+	dGeomSetData(geom,new dxGeomUserData());
 	(dGeomGetUserData(geom))->pushing_neg=false;
 	(dGeomGetUserData(geom))->pushing_b_neg=false;
 	(dGeomGetUserData(geom))->b_static_colide=true;
@@ -225,7 +240,7 @@ IC void dGeomUserDataSetContactCallback(dxGeom* geom,ContactCallbackFun* callbac
 IC void dGeomUserDataSetObjectContactCallback(dxGeom* geom,ObjectContactCallbackFun	*obj_callback)
 {
 	xr_delete((dGeomGetUserData(geom))->object_callbacks);
-	if(obj_callback)(dGeomGetUserData(geom))->object_callbacks=xr_new<CObjectContactCallback>(obj_callback);
+	if(obj_callback)(dGeomGetUserData(geom))->object_callbacks= new CObjectContactCallback(obj_callback);
 }
 
 IC void dGeomUserDataAddObjectContactCallback(dxGeom* geom,ObjectContactCallbackFun	*obj_callback)
@@ -262,6 +277,9 @@ IC void dGeomUserDataResetLastPos(dxGeom* geom)
 	(dGeomGetUserData(geom))->last_pos[0]=-dInfinity;
 	(dGeomGetUserData(geom))->last_pos[1]=-dInfinity;
 	(dGeomGetUserData(geom))->last_pos[2]=-dInfinity;
+	(dGeomGetUserData(geom))->pushing_neg=false;
+	(dGeomGetUserData(geom))->pushing_b_neg=false;
+	(dGeomGetUserData(geom))->b_static_colide=true;
 }
 IC void dGeomUserDataClearCashedTries(dxGeom* geom)
 {

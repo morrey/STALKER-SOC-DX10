@@ -14,6 +14,9 @@ void CPHShellSimpleCreator::CreatePhysicsShell()
 	VERIFY							(pKinematics);
 
 	if(owner->PPhysicsShell())		return;
+
+	phys_shell_verify_object_model ( *owner );
+
 	owner->PPhysicsShell()			= P_create_Shell();
 #ifdef DEBUG
 	owner->PPhysicsShell()->dbg_obj=owner;

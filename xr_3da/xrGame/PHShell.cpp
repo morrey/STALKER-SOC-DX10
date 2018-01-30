@@ -1,6 +1,6 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-#include "StdAfx.h"
+#include "stdafx.h"
 #include "PHDynamicData.h"
 #include "Physics.h"
 #include "tri-colliderknoopc/dTriList.h"
@@ -15,14 +15,14 @@
 #include "game_object_space.h"
 //#pragma warning(disable:4995)
 //#pragma warning(disable:4267)
-//#include "../../xrODE/ode/src/collision_kernel.h"
+//#include "ode/ode/src/collision_kernel.h"
 //#pragma warning(default:4995)
 //#pragma warning(default:4267)
 ///////////////////////////////////////////////////////////////
 ///#pragma warning(disable:4995)
 
-//#include "../../xrODE/ode/src/joint.h"
-//#include "../../xrODE/ode/src/objects.h"
+//#include "ode/ode/src/joint.h"
+//#include "ode/ode/src/objects.h"
 
 //#pragma warning(default:4995)
 ///////////////////////////////////////////////////////////////////
@@ -32,22 +32,24 @@
 #include "PHShell.h"
 #include "PHCollideValidator.h"
 #include "PHElementInline.h"
+#include "PhysicsShellAnimator.h"
 
-#ifdef ANIMATED_PHYSICS_OBJECT_SUPPORT
-	#include "PhysicsShellAnimator.h"
+#include <boost/noncopyable.hpp>
+#ifdef DEBUG
+#include	"phdebug.h"
 #endif
-
 IC		bool	PhOutOfBoundaries			(const Fvector& v)
 {
 	return v.y < phBoundaries.y1;
 }
 CPHShell::~CPHShell				()							
 {
+	
 	m_pKinematics	= 0;
 	VERIFY(!isActive());
 	
 	xr_vector<CPHElement*>::iterator i;
-	for(i = elements.begin();elements.end()!=i;++i)
+	for(i=elements.begin();elements.end()!=i;++i)
 		xr_delete(*i);
 	elements.clear();
 
@@ -56,6 +58,7 @@ CPHShell::~CPHShell				()
 		xr_delete(*j);
 	joints.clear();
 	if(m_spliter_holder)xr_delete(m_spliter_holder);
+
 }
 CPHShell::CPHShell()
 {
@@ -69,11 +72,7 @@ CPHShell::CPHShell()
 	m_spliter_holder=NULL;
 	m_object_in_root.identity();
 	m_active_count=0;
-
-#ifdef ANIMATED_PHYSICS_OBJECT_SUPPORT
 	m_pPhysicsShellAnimatorC=NULL;
-#endif
-
 }
 
 void CPHShell::EnableObject(CPHObject* obj)
@@ -151,9 +150,9 @@ void CPHShell::setDensity(float M)
 {
 	ELEMENT_I i;
 	//float volume=0.f;
-	//for(i =elements.begin();elements.end() != i;++i)	volume+=(*i)->get_volume();
+	//for(i=elements.begin();elements.end() != i;++i)	volume+=(*i)->get_volume();
 
-	for(i =elements.begin();elements.end() != i;++i)
+	for(i=elements.begin();elements.end() != i;++i)
 		(*i)->setDensity(M);
 }
 
@@ -161,9 +160,9 @@ void CPHShell::setDensity(float M)
 void CPHShell::setMass(float M){
 	ELEMENT_I i;
 	float volume=0.f;
-	for(i =elements.begin();elements.end() != i;++i)	volume+=(*i)->get_volume();
+	for(i=elements.begin();elements.end() != i;++i)	volume+=(*i)->get_volume();
 
-	for(i =elements.begin();elements.end() != i;++i)
+	for(i=elements.begin();elements.end() != i;++i)
 		(*i)->setMass(
 		(*i)->get_volume()/volume*M
 		);
@@ -173,7 +172,7 @@ void CPHShell::setMass1(float M){
 	ELEMENT_I i;
 
 
-	for(i =elements.begin();elements.end() != i;++i)
+	for(i=elements.begin();elements.end() != i;++i)
 		(*i)->setMass(
 		M/elements.size()
 		);
@@ -184,7 +183,7 @@ float CPHShell::getMass()
 
 	ELEMENT_I i;
 
-	for(i =elements.begin();elements.end() != i;++i)	m+=(*i)->getMass();
+	for(i=elements.begin();elements.end() != i;++i)	m+=(*i)->getMass();
 
 	return m;
 }
@@ -200,7 +199,7 @@ float CPHShell::getVolume()
 
 	ELEMENT_I i;
 
-	for(i =elements.begin();elements.end() != i;++i)	v+=(*i)->getVolume();
+	for(i=elements.begin();elements.end() != i;++i)	v+=(*i)->getVolume();
 
 	return v;
 }
@@ -229,10 +228,18 @@ void CPHShell::PhDataUpdate(dReal step){
 				DisableObject();
 				CPHObject::put_in_recently_deactivated();
 	}
-	else		ReanableObject();
-
+	else		
+		ReanableObject();
+#if 0
+	DBG_OpenCashedDraw();
+	dbg_draw_velocity	( 0.1f, color_xrgb( 255, 0, 0 ) ); 
+	dbg_draw_force		( 0.1f, color_xrgb( 0, 0, 255 ) ); 
+	DBG_ClosedCashedDraw( 10000 );
+	//dbg_draw_geometry
+#endif
 	if(PhOutOfBoundaries(cast_fv(dBodyGetPosition((*elements.begin())->get_body()))))
 								Disable();
+
 }
 
 
@@ -247,7 +254,7 @@ void CPHShell::Update(){
 	if(!isActive()) return;
 	if(m_flags.test(flActivating)) m_flags.set(flActivating,FALSE);
 	ELEMENT_I i;
-	for(i =elements.begin();elements.end() != i;++i)
+	for(i=elements.begin();elements.end() != i;++i)
 		(*i)->Update();
 
 	mXFORM.set((*elements.begin())->mXFORM);
@@ -314,9 +321,9 @@ void	CPHShell::	applyImpulseTrace		(const Fvector& pos, const Fvector& dir, floa
 	if(!isActive()) return;
 	VERIFY(m_pKinematics);
 	CBoneInstance& instance=m_pKinematics->LL_GetBoneInstance				(id);
-	if(instance.Callback_type!=bctPhysics || !instance.Callback_Param) return;
+	if(instance.callback_type()!=bctPhysics || !instance.callback_param()) return;
 
-	((CPhysicsElement*)instance.Callback_Param)->applyImpulseTrace		( pos,  dir,  val, id);
+	((CPhysicsElement*)instance.callback_param())->applyImpulseTrace		( pos,  dir,  val, id);
 	EnableObject(0);
 }
 
@@ -334,20 +341,38 @@ CPhysicsElement* CPHShell::get_ElementByStoreOrder(u16 num)
 	R_ASSERT2(num<elements.size(),"argument is out of range");
 	return cast_PhysicsElement(elements[num]);
 }
-
-CPHSynchronize*	CPHShell::get_ElementSync			  (u16 element)
+const CPhysicsElement *CPHShell::get_ElementByStoreOrder(u16 num) const
+{
+	R_ASSERT2(num<elements.size(),"argument is out of range");
+	return cast_PhysicsElement(elements[num]);
+}
+CPHSynchronize*	CPHShell::get_ElementSync			  ( u16 element )
 {
 	return smart_cast<CPHSynchronize*>(elements[element]);
 }
 
-CPhysicsElement* CPHShell::get_Element(u16 bone_id)
+CPhysicsElement* CPHShell::get_PhysicsParrentElement( u16 bone_id )
+{
+	VERIFY( PKinematics() );
+	CPhysicsElement* E		= get_Element( bone_id );
+	u16 bid					= bone_id;
+	while( !E && bid !=  PKinematics()->LL_GetBoneRoot() )
+	{
+		CBoneData	&bd =	PKinematics()->LL_GetData( bid );
+					bid =	bd.GetParentID();
+		E =			get_Element( bid );
+	}
+	return E;
+}
+
+CPhysicsElement* CPHShell::get_Element( u16 bone_id )
 {
 	if(m_pKinematics&& isActive())
 	{
 		CBoneInstance& instance=m_pKinematics->LL_GetBoneInstance				(bone_id);
-		if(instance.Callback==BonesCallback||instance.Callback==StataticRootBonesCallBack)
+		if(instance.callback()==BonesCallback||instance.callback()==StataticRootBonesCallBack)
 		{
-			return (instance.Callback_type==bctPhysics)?(CPhysicsElement*)instance.Callback_Param:NULL;
+			return (instance.callback_type()==bctPhysics)?(CPhysicsElement*)instance.callback_param():NULL;
 		}
 	}
 
@@ -386,18 +411,43 @@ u16			CPHShell::get_JointsNumber				()
 {
 	return u16(joints.size());
 }
-void  CPHShell:: BonesCallback				(CBoneInstance* B){
+
+void	CPHShell:: update_root_transforms			()
+{
+	u16 anim_root = PKinematics()->LL_GetBoneRoot();
+	u16 phys_root = root_element().m_SelfID;
+	VERIFY( BI_NONE != anim_root );
+	VERIFY( BI_NONE != phys_root );
+
+	if( anim_root == phys_root )
+	{
+		mXFORM.set( root_element().mXFORM );
+		return;
+	}
+	
+
+	//Fmatrix anim_root_transform = PKinematics()->LL_GetBindTransform( anim_root );
+
+
+}
+
+void  CPHShell:: BonesCallback				( CBoneInstance* B ){
 	///CPHElement*	E			= smart_cast<CPHElement*>	(static_cast<CPhysicsBase*>(B->Callback_Param));
 
-	CPHElement*	E			= cast_PHElement(B->Callback_Param);
+	CPHElement*	E	= cast_PHElement( B->callback_param() );
+	//if( E == &root_element() )
+	//{
+		
+	//}
 	E->BonesCallBack(B);
+	VERIFY2( _valid(B->mTransform), "CPHShell:: BonesCallback" );
 }
 
 
 void  CPHShell::StataticRootBonesCallBack			(CBoneInstance* B){
 	///CPHElement*	E			= smart_cast<CPHElement*>	(static_cast<CPhysicsBase*>(B->Callback_Param));
 
-	CPHElement*	E			= cast_PHElement(B->Callback_Param);
+	CPHElement*	E			= cast_PHElement(B->callback_param());
 	E->StataticRootBonesCallBack(B);
 }
 
@@ -434,7 +484,7 @@ void CPHShell::set_PhysicsRefObject	 (CPhysicsShellHolder* ref_object)
  	if(elements.empty()) return;
 	if((*elements.begin())->PhysicsRefObject()==ref_object) return;
 	ELEMENT_I i;
-	for(i =elements.begin();elements.end() != i;++i)
+	for(i=elements.begin();elements.end() != i;++i)
 	{
 		(*i)->set_PhysicsRefObject(ref_object);
 	}
@@ -448,7 +498,7 @@ void CPHShell::set_PhysicsRefObject	 (CPhysicsShellHolder* ref_object)
 void CPHShell::set_ContactCallback(ContactCallbackFun* callback)
 {
 	ELEMENT_I i;
-	for(i =elements.begin();elements.end() != i;++i)
+	for(i=elements.begin();elements.end() != i;++i)
 		(*i)->set_ContactCallback(callback);
 }
 
@@ -456,39 +506,39 @@ void CPHShell::set_ContactCallback(ContactCallbackFun* callback)
 void CPHShell::set_ObjectContactCallback(ObjectContactCallbackFun* callback)
 {
 	ELEMENT_I i;
-	for(i =elements.begin();elements.end() != i;++i)
+	for(i=elements.begin();elements.end() != i;++i)
 		(*i)->set_ObjectContactCallback(callback);
 }
 void CPHShell::add_ObjectContactCallback(ObjectContactCallbackFun* callback)
 {
 	ELEMENT_I i;
-	for(i =elements.begin();elements.end() != i;++i)
+	for(i=elements.begin();elements.end() != i;++i)
 		(*i)->add_ObjectContactCallback(callback);
 }
 void CPHShell::remove_ObjectContactCallback(ObjectContactCallbackFun* callback)
 {
 	ELEMENT_I i;
-	for(i =elements.begin();elements.end() != i;++i)
+	for(i=elements.begin();elements.end() != i;++i)
 		(*i)->remove_ObjectContactCallback(callback);
 }
 void CPHShell::set_CallbackData(void *cd)
 {
 	ELEMENT_I i;
-	for(i =elements.begin();elements.end() != i;++i)
+	for(i=elements.begin();elements.end() != i;++i)
 		(*i)->set_CallbackData(cd);
 }
 void CPHShell::SetPhObjectInElements()
 {
 	if(!isActive()) return;
 	ELEMENT_I i;
-	for(i =elements.begin();elements.end() != i;++i )
+	for(i=elements.begin();elements.end() != i;++i )
 		(*i)->SetPhObjectInGeomData((CPHObject*)this);
 }
 
 void CPHShell::SetMaterial(LPCSTR m)
 {
 	ELEMENT_I i;
-	for(i =elements.begin();elements.end() != i;++i)
+	for(i=elements.begin();elements.end() != i;++i)
 	{
 		(*i)->SetMaterial(m);
 	}
@@ -497,19 +547,19 @@ void CPHShell::SetMaterial(LPCSTR m)
 void CPHShell::SetMaterial(u16 m)
 {
 	ELEMENT_I i;
-	for(i =elements.begin();elements.end() != i;++i)
+	for(i=elements.begin();elements.end() != i;++i)
 	{
 		(*i)->SetMaterial(m);
 	}
 }
 
-void CPHShell::get_LinearVel(Fvector& velocity)
+void CPHShell::get_LinearVel(Fvector& velocity) const
 {
 
 	(*elements.begin())->get_LinearVel(velocity);
 }
 
-void CPHShell::get_AngularVel(Fvector& velocity)
+void CPHShell::get_AngularVel(Fvector& velocity) const
 {
 
 	(*elements.begin())->get_AngularVel(velocity);
@@ -550,7 +600,7 @@ void CPHShell::SmoothElementsInertia(float k)
 	dReal krc=1.f-k;
 	dMassSetZero(&m_avrg);
 	ELEMENT_I i;
-	for(i =elements.begin();elements.end() != i;++i)
+	for(i=elements.begin();elements.end() != i;++i)
 	{
 
 		dMassAdd(&m_avrg,(*i)->getMassTensor());
@@ -560,7 +610,7 @@ void CPHShell::SmoothElementsInertia(float k)
 	m_avrg.mass*=k/float(n);
 	for(int j=0;j<4*3;++j) m_avrg.I[j]*=k/float(n);
 
-	for(i =elements.begin();elements.end() != i;++i)
+	for(i=elements.begin();elements.end() != i;++i)
 	{
 		dVector3 tmp;
 		dMass* m=(*i)->getMassTensor();
@@ -594,10 +644,12 @@ void CPHShell::addEquelInertiaToEls(const dMass& M)
 static BONE_P_MAP* spGetingMap=NULL;
 void CPHShell::build_FromKinematics(IKinematics* K,BONE_P_MAP* p_geting_map)
 {
+	VERIFY( K );
+	phys_shell_verify_model ( *K );
 	m_pKinematics			=K;
 	spGetingMap				=p_geting_map;
 	//CBoneData& bone_data	= m_pKinematics->LL_GetData(0);
-	if(!m_spliter_holder) m_spliter_holder=xr_new<CPHShellSplitterHolder>(this);
+	if(!m_spliter_holder) m_spliter_holder= new CPHShellSplitterHolder(this);
 	bool vis_check = false;
 	AddElementRecursive(0,m_pKinematics->LL_GetBoneRoot(),Fidentity,0,&vis_check);
 	//R_ASSERT2((*elements.begin())->numberOfGeoms(),"No physics shapes was assigned for model or no shapes in main root bone!!!");
@@ -607,13 +659,15 @@ void CPHShell::build_FromKinematics(IKinematics* K,BONE_P_MAP* p_geting_map)
 
 void CPHShell::preBuild_FromKinematics(IKinematics* K,BONE_P_MAP* p_geting_map)
 {
+	VERIFY( K );
+	phys_shell_verify_model ( *K );
 	m_pKinematics			=K;
 	spGetingMap				=p_geting_map;
 	//CBoneData& bone_data	= m_pKinematics->LL_GetData(0);
-	if(!m_spliter_holder) m_spliter_holder=xr_new<CPHShellSplitterHolder>(this);
+	if(!m_spliter_holder) m_spliter_holder= new CPHShellSplitterHolder(this);
 	bool vis_check=false;
 	AddElementRecursive(0,m_pKinematics->LL_GetBoneRoot(),Fidentity,0,&vis_check);
-	R_ASSERT2((*elements.begin())->numberOfGeoms(),"No physics shapes was assigned for model or no shapes in main root bone!!!");
+	//R_ASSERT2((*elements.begin())->numberOfGeoms(),"No physics shapes was assigned for model or no shapes in main root bone!!!");
 	if(m_spliter_holder->isEmpty())ClearBreakInfo();
 	m_pKinematics=0;
 }
@@ -630,14 +684,16 @@ void CPHShell::ClearBreakInfo()
 	}	
 	xr_delete(m_spliter_holder);
 }
+
+	
 ICF bool no_physics_shape(const SBoneShape& shape)
 {
 	return shape.type==SBoneShape::stNone||shape.flags.test(SBoneShape::sfNoPhysics);
 }
 
-bool shape_is_physic(const SBoneShape& shape)
+bool shape_is_physic( const SBoneShape& shape )
 {
-	return !no_physics_shape(shape);
+	return !no_physics_shape( shape );
 }
 
 void CPHShell::AddElementRecursive(CPhysicsElement* root_e, u16 id,Fmatrix global_parent,u16 element_number,bool* vis_check)
@@ -680,7 +736,7 @@ void CPHShell::AddElementRecursive(CPhysicsElement* root_e, u16 id,Fmatrix globa
 	lvis_check=(check_obb_sise(bone_data.obb));
 	
 	bool *arg_check=vis_check;
-	if(breakable||!root_e)
+	if(breakable||!root_e)//.
 	{
 		arg_check=&lvis_check;
 	}
@@ -694,7 +750,7 @@ void CPHShell::AddElementRecursive(CPhysicsElement* root_e, u16 id,Fmatrix globa
 	u16	 splitter_position=0;
 	u16 fracture_num=u16(-1);
 
-	if(!no_physics_shape(bone_data.shape)|| !root_e)	//
+	if(!no_physics_shape(bone_data.shape) || !root_e)	//
 	{	
 
 		if(joint_data.type==jtRigid && root_e ) //
@@ -956,7 +1012,7 @@ void CPHShell::AddElementRecursive(CPhysicsElement* root_e, u16 id,Fmatrix globa
 				if(J)
 				{
 					
-					J->SetForceAndVelocity(0.f);//joint_data.friction
+					J->SetForceAndVelocity(joint_data.friction);//joint_data.friction
 					SetJointRootGeom(root_e,J);
 					J->SetBoneID(id);
 					add_Joint	(J);
@@ -982,7 +1038,11 @@ void CPHShell::AddElementRecursive(CPhysicsElement* root_e, u16 id,Fmatrix globa
 	if(!no_physics_shape(bone_data.shape))
 	{
 		CODEGeom* added_geom	=	E->last_geom();
-		if(added_geom)	added_geom->set_bone_id(id);
+		if(added_geom)
+		{
+			added_geom->set_bone_id(id);
+			added_geom->set_shape_flags( bone_data.shape.flags );
+		}
 	}
 #ifdef DEBUG
 	if(E->last_geom())
@@ -1066,7 +1126,7 @@ void CPHShell::ResetCallbacksRecursive(u16 id,u16 element,Flags64 &mask)
 	CBoneData& bone_data= m_pKinematics->LL_GetData(u16(id));
 	SJointIKData& joint_data=bone_data.IK_data;
 
-	if(mask.is(1ui64<<(u64)id))
+	if( mask.is(1ui64<<(u64)id) )
 	{
 
 		if(no_physics_shape(bone_data.shape)||joint_data.type==jtRigid&& element!=u16(-1))
@@ -1081,7 +1141,7 @@ void CPHShell::ResetCallbacksRecursive(u16 id,u16 element,Flags64 &mask)
 			R_ASSERT2(element<elements.size(),"Out of elements!!");
 			//if(elements.size()==element)	return;
 			B.set_callback(bctPhysics,BonesCallback,cast_PhysicsElement(elements[element]));
-			B.Callback_overwrite=TRUE;
+			B.set_callback_overwrite(TRUE);
 		}
 	}
 	for (vecBonesIt it=bone_data.children.begin(); it!=bone_data.children.end(); ++it)
@@ -1091,28 +1151,84 @@ void CPHShell::ResetCallbacksRecursive(u16 id,u16 element,Flags64 &mask)
 void CPHShell::EnabledCallbacks(BOOL val)
 {
 	if (val){	
-		SetCallbacks(BonesCallback);
+		SetCallbacks( );
 		// set callback owervrite in used bones
 		ELEMENT_I i,e;
 		i=elements.begin(); e=elements.end();
 		for( ;i!=e;++i){
 			CBoneInstance& B	= m_pKinematics->LL_GetBoneInstance((*i)->m_SelfID);
-			B.Callback_overwrite= TRUE;
+			B.set_callback_overwrite(TRUE);
 		}
 	}else		ZeroCallbacks();
 }
 
-static u16 element_position_in_set_calbacks=u16(-1);
-static BoneCallbackFun* bones_callback;//temp ror SetCallbacksRecursive
-void CPHShell::SetCallbacks(BoneCallbackFun* callback)
+
+
+template< typename T>
+void for_each_bone_id( IKinematics &K, T op )
 {
+	u16 bn =  K.LL_BoneCount();
+	for(u16 i = 0; i < bn; ++i )
+		op( i );
+}
+
+CPHElement* get_physics_parent( IKinematics &k,  u16 id )
+{
+	VERIFY( BI_NONE != id );
+	
+	while( true )
+	{
+		CBoneInstance	& B			= k.LL_GetBoneInstance( u16(id) );
+		CBoneData		& bone_data	= k.LL_GetData( u16(id) );
+		if( B.callback_type() == bctPhysics && B.callback_param() )
+			return cast_PHElement( B.callback_param() );
+
+		if( k.LL_GetBoneRoot() == id )
+			return 0;
+
+		id = bone_data.GetParentID();
+
+		if( BI_NONE == id )
+			return 0;
+	}
+}
+static u16 element_position_in_set_calbacks=u16(-1);
+void CPHShell::SetCallbacks( )
+{
+	/*
+	struct set_bone_callback
+	{
+		void operator() ( CPHElement* e){e->SetBoneCallback(); }
+	};
+	std::for_each( elements.begin(), elements.end(), set_bone_callback() );
+
+	struct set_bone_reference: private boost::noncopyable
+	{
+		IKinematics &K;
+		set_bone_reference( IKinematics &K_ ): K( K_ ){}
+		void operator() ( u16 id )
+		{
+			CBoneInstance &bi  = K.LL_GetBoneInstance(id);
+			if(!bi.callback() || bi.callback_type() != bctPhysics  )
+			{
+				CPHElement *root_e = get_physics_parent( K, id );
+				if( root_e && K.LL_GetBoneVisible( id ) )
+					bi.set_callback( bctPhysics, 0, cast_PhysicsElement( root_e ) );
+			}
+		}
+	};
+	for_each_bone_id( *PKinematics(), set_bone_reference( *PKinematics() ) );
+	*/
 	element_position_in_set_calbacks=u16(-1);
-	bones_callback=callback;
+	
 	SetCallbacksRecursive(m_pKinematics->LL_GetBoneRoot(),element_position_in_set_calbacks);
 }
 
+
+
 void CPHShell::SetCallbacksRecursive(u16 id,u16 element)
 {
+	VERIFY( false );
 	//if(elements.size()==element)	return;
 	CBoneInstance& B	= m_pKinematics->LL_GetBoneInstance(u16(id));
 	CBoneData& bone_data= m_pKinematics->LL_GetData(u16(id));
@@ -1128,7 +1244,7 @@ void CPHShell::SetCallbacksRecursive(u16 id,u16 element)
 			element=element_position_in_set_calbacks;
 			R_ASSERT2(element<elements.size(),"Out of elements!!");
 			//if(elements.size()==element)	return;
-			B.set_callback(bctPhysics,bones_callback,cast_PhysicsElement(elements[element]));
+			B.set_callback(bctPhysics,BonesCallback,cast_PhysicsElement(elements[element]));
 			//B.Callback_overwrite=TRUE;
 		}
 	}
@@ -1145,8 +1261,10 @@ void CPHShell::ZeroCallbacksRecursive(u16 id)
 {
 	CBoneInstance& B	= m_pKinematics->LL_GetBoneInstance(u16(id));
 	CBoneData& bone_data= m_pKinematics->LL_GetData(u16(id));
-	B.reset_callback	();
-	B.Callback_overwrite=FALSE;
+	if(B.callback_type() == bctPhysics)
+	{
+		B.reset_callback	();
+	}
 	for (vecBonesIt it=bone_data.children.begin(); bone_data.children.end() != it; ++it)
 		ZeroCallbacksRecursive		((*it)->GetSelfID());
 
@@ -1185,6 +1303,12 @@ void CPHShell::UpdateRoot()
 
 }
 
+Fmatrix& CPHShell::get_animation_root_matrix( Fmatrix& m )
+{
+
+	return m;
+}
+
 void CPHShell::InterpolateGlobalTransform(Fmatrix* m)
 {
 	
@@ -1194,32 +1318,45 @@ void CPHShell::InterpolateGlobalTransform(Fmatrix* m)
 	i=elements.begin(); e=elements.end();
 	for( ;i!=e;++i)
 		(*i)->InterpolateGlobalTransform(&(*i)->mXFORM);
-	m->set((*elements.begin())->mXFORM);
+
+	m->set( root_element().mXFORM );
+
 	m->mulB_43	(m_object_in_root);
+
 	mXFORM.set(*m);
+
 	VERIFY2(_valid(*m),"not valide transform");
+
 	CPhysicsShellHolder* ref_object=(*elements.begin())->PhysicsRefObject();
 	if(ref_object&&m_active_count<0)
 	{
 		ref_object->processing_deactivate();
+		ref_object->spatial_move();
 		m_active_count=0;
 	}
+
 }
 
-void CPHShell::GetGlobalTransformDynamic(Fmatrix* m)
+void CPHShell::GetGlobalTransformDynamic(Fmatrix* m) 
 {
-	ELEMENT_I i,e;
+	ELEMENT_CI i,e;
 	i=elements.begin(); e=elements.end();
 	for( ;i!=e;++i)
 		(*i)->GetGlobalTransformDynamic(&(*i)->mXFORM);
 	m->set((*elements.begin())->mXFORM);
+
 	m->mulB_43	(m_object_in_root);
+	mXFORM.set(*m);
+
 	VERIFY2(_valid(*m),"not valide transform");
+
 }
 void CPHShell::InterpolateGlobalPosition(Fvector* v)
 {
 	(*elements.begin())->InterpolateGlobalPosition(v);
+
 	v->add(m_object_in_root.c);
+
 	VERIFY2(_valid(*v),"not valide result position");
 }
 
@@ -1241,16 +1378,21 @@ void CPHShell::ObjectToRootForm(const Fmatrix& form)
 	VERIFY2(_valid(form),"not valide transform");
 	
 }
-CPhysicsElement* CPHShell::NearestToPoint(const Fvector& point)
+
+
+
+CPhysicsElement* CPHShell::NearestToPoint(const Fvector& point, NearestToPointCallback *cb /*=0*/)
 {
 	ELEMENT_I i,e;
 	i=elements.begin(); e=elements.end();
 	float min_distance	=dInfinity;
 	CPHElement* nearest_element=NULL;
-	for( ;i!=e;++i)
+	for( ; i!=e; ++i )
 	{
 		Fvector tmp;
 		float	distance;
+		if( cb && ! (*cb)( *i ) )
+			continue;
 		(*i)->GetGlobalPositionDynamic(&tmp);
 		tmp.sub(point);
 		distance=tmp.magnitude();
@@ -1333,13 +1475,13 @@ void CPHShell::setElementSplitter(u16 element_number,u16 splitter_position)
 }
 void CPHShell::AddSplitter(CPHShellSplitter::EType type,u16 element,u16 joint)
 {
-	if(!m_spliter_holder) m_spliter_holder=xr_new<CPHShellSplitterHolder>(this);
+	if(!m_spliter_holder) m_spliter_holder= new CPHShellSplitterHolder(this);
 	m_spliter_holder->AddSplitter(type,element,joint);
 }
 
 void CPHShell::AddSplitter(CPHShellSplitter::EType type,u16 element,u16 joint,u16 position)
 {
-	if(!m_spliter_holder) m_spliter_holder=xr_new<CPHShellSplitterHolder>(this);
+	if(!m_spliter_holder) m_spliter_holder= new CPHShellSplitterHolder(this);
 	m_spliter_holder->AddSplitter(type,element,joint,position);
 }
 void CPHShell::setEndJointSplitter()
@@ -1373,10 +1515,11 @@ u16 CPHShell::BoneIdToRootGeom(u16 id)
 
 void CPHShell::SetJointRootGeom(CPhysicsElement* root_e,CPhysicsJoint* J)
 {
+	R_ASSERT(root_e);
+	R_ASSERT( J );
 	CPHElement* e=cast_PHElement(root_e);
 	CPHJoint*	j=static_cast<CPHJoint*>(J);
-	R_ASSERT(e);
-	R_ASSERT(j);
+
 	CPHFracturesHolder* f_holder=e->FracturesHolder();
 	if(!f_holder) return;
 	j->RootGeom()=e->Geom(f_holder->LastFracture().m_start_geom_num);
@@ -1484,25 +1627,38 @@ void CPHShell::AddTracedGeom				(u16 element/*=0*/,u16 geom/*=0*/)
 	CODEGeom* g=elements[element]->Geom(geom);
 	g->set_ph_object(this);
 	m_traced_geoms.add(g);
-	
+	EnableGeomTrace	();
 }
 void CPHShell::SetAllGeomTraced()
 {
-	ELEMENT_I i,e;
-	i=elements.begin(); e=elements.end();
-	for( ;i!=e;++i)
+	ELEMENT_I i, e, b;
+	b = elements.begin(); e=elements.end();
+	for( i=b ;i!=e; ++i )
 	{
-		
 		u16 gn=(*i)->numberOfGeoms();
 		for(u16 j=0;j<gn;++j)
-		{
-			CODEGeom* g=(*i)->Geom(j);
-			g->set_ph_object(this);
-			m_traced_geoms.add(g);
-		}
+			AddTracedGeom( u16(i-b), j );
 	}
-	CPHObject::SetRayMotions();
+	
 }
+
+void		CPHShell::		ClearTracedGeoms()
+{
+	m_traced_geoms.clear();
+	DisableGeomTrace();
+}
+
+void		CPHShell::		DisableGeomTrace()
+{
+	CPHObject::UnsetRayMotions();
+}
+void		CPHShell::		EnableGeomTrace	()
+{
+	if( !m_traced_geoms.empty() )
+			CPHObject::SetRayMotions();
+}
+
+
 void CPHShell::SetPrefereExactIntegration()
 {
 	CPHObject::SetPrefereExactIntegration();
@@ -1534,8 +1690,9 @@ CODEGeom* CPHShell::get_GeomByID(u16 bone_id)
 }
 void	CPHShell::PureStep(float step)
 {
-	CPHObject::Island().Step(step);
-	PhDataUpdate(step);
+	//CPHObject::Island().Step(step);
+	//PhDataUpdate(step);
+	CPHObject::step( step );
 }
 void CPHShell::CollideAll()
 {
@@ -1573,32 +1730,30 @@ void CPHShell::SetIgnoreRagDoll()
 	CPHCollideValidator::SetRagDollClassNotCollide(*this);
 }
 
-#ifdef ANIMATED_PHYSICS_OBJECT_SUPPORT
+
 	//Делает данный физический объек анимированным 
-	void CPHShell::SetAnimated()
-	{	
-		//Для фильтра коллизий относим данный объект к классу анимированных
-		CPHCollideValidator::SetAnimatedClass(*this);
-		m_pPhysicsShellAnimatorC=xr_new<CPhysicsShellAnimator>(this);
-		//m_pPhysicsShellAnimatorC->ResetCallbacks();
-	}
+void CPHShell::CreateShellAnimator( CInifile* ini, LPCSTR section )
+{	
+	//Для фильтра коллизий относим данный объект к классу анимированных
+	CPHCollideValidator::SetAnimatedClass(*this);
+	m_pPhysicsShellAnimatorC= new CPhysicsShellAnimator( this,  ini, section );
+	VERIFY( PhysicsRefObject( ) );
+	PhysicsRefObject()->processing_activate();
+	//m_pPhysicsShellAnimatorC->ResetCallbacks();
+}
 
-	//Настраивает фильтр коллизий на игнорирование столкновенний данного
-	//физического объекта с анимированным физическим объектом
-	void CPHShell::SetIgnoreAnimated()
-	{
-		//Для фильтра коллизий указываем, что данный
-		//физический объект игнорирует анимированные физические тела
-		
-		CPHCollideValidator::SetAnimatedClassNotCollide(*this);
-	}
+//Настраивает фильтр коллизий на игнорирование столкновенний данного
+//физического объекта с анимированным физическим объектом
+void CPHShell::SetIgnoreAnimated()
+{
+	//Для фильтра коллизий указываем, что данный
+	//физический объект игнорирует анимированные физические тела
+	
+	CPHCollideValidator::SetAnimatedClassNotCollide(*this);
+}
 
-	//Выдает информацию о том является ли данный объект анимированным
-	bool CPHShell::Animated()
-	{
-		return	CPHCollideValidator::IsAnimatedObject(*this);
-	}
-#endif
+//Выдает информацию о том является ли данный объект анимированным
+
 
 void	CPHShell::				SetSmall()
 {
@@ -1628,10 +1783,12 @@ void CPHShell::ClearCashedTries()
 	for( ;i!=e;++i)(*i)->clear_cashed_tries();
 }
 
-void CPHShell::get_Extensions(const Fvector& axis,float center_prg,float& lo_ext, float& hi_ext)
+void CPHShell::get_Extensions(const Fvector& axis,float center_prg,float& lo_ext, float& hi_ext) const
 {
+	t_get_extensions( elements, axis, center_prg, lo_ext, hi_ext );
+	/*
 	lo_ext=dInfinity;hi_ext=-dInfinity;
-	ELEMENT_I i=elements.begin(),e=elements.end();
+	ELEMENT_CI i=elements.begin(),e=elements.end();
 	for(;i!=e;++i)
 	{
 		float temp_lo_ext,temp_hi_ext;
@@ -1639,7 +1796,7 @@ void CPHShell::get_Extensions(const Fvector& axis,float center_prg,float& lo_ext
 		if(lo_ext>temp_lo_ext)lo_ext=temp_lo_ext;
 		if(hi_ext<temp_hi_ext)hi_ext=temp_hi_ext;
 	}
-
+*/
 }
 
 const	CGID&	CPHShell::GetCLGroup										()const
@@ -1664,12 +1821,11 @@ void	CPHShell::		SetBonesCallbacksOverwrite(bool v)
 
 void		CPHShell::	ToAnimBonesPositions	()
 {
-	VERIFY(PKinematics());
+	VERIFY( PKinematics() );
 	ELEMENT_I i,e;
 	i=elements.begin(); e=elements.end();
-	for( ;i!=e;++i)	
-		(*i)->ToBonePos(&PKinematics()->LL_GetBoneInstance((*i)->m_SelfID));
-	
+	for( ; i!=e; ++i )	
+		(*i)->ToBonePos( &PKinematics()->LL_GetBoneInstance( (*i)->m_SelfID ) );
 }
 
 bool	CPHShell::		AnimToVelocityState		( float dt, float l_limit, float a_limit )
@@ -1677,7 +1833,46 @@ bool	CPHShell::		AnimToVelocityState		( float dt, float l_limit, float a_limit )
 	ELEMENT_I i,e;
 	i=elements.begin(); e=elements.end();
 	bool ret = true;
-	for( ;i!=e;++i)
-		ret  =(*i)->AnimToVel(dt,l_limit,a_limit) && ret;
+	for( ;i!=e; ++i )
+		ret  =(*i)->AnimToVel( dt, l_limit, a_limit ) && ret;
 	return ret;	
 }
+
+void	CPHShell::SetAnimated( bool v )
+{
+	ELEMENT_I i, e;
+	i = elements.begin(); e=elements.end();
+	for( ; i!=e; ++i )
+		(*i)->SetAnimated( v );
+	
+}
+
+
+
+
+#ifdef DEBUG
+void		CPHShell::		dbg_draw_velocity				( float scale, u32 color )
+{
+		ELEMENT_I i, e;
+	i = elements.begin(); e=elements.end();
+	for( ; i!=e; ++i )
+		(*i)->dbg_draw_velocity( scale, color );
+
+}
+void		CPHShell::		dbg_draw_force				( float scale, u32 color )
+{
+	ELEMENT_I i, e;
+	i = elements.begin(); e=elements.end();
+	for( ; i!=e; ++i )
+		(*i)->dbg_draw_force( scale, color );
+}
+
+void CPHShell::dbg_draw_geometry	( float scale, u32 color, Flags32 flags /*= Flags32().assign( 0 )*/ ) const
+{
+	ELEMENT_CI i, e;
+	i = elements.begin(); e=elements.end();
+	for( ; i!=e; ++i )
+		(*i)->dbg_draw_geometry( scale, color, flags );
+}
+
+#endif

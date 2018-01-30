@@ -1,8 +1,8 @@
 #include "stdafx.h"
 #include "ParticlesObject.h"
-#include "../gamemtllib.h"
-#include "level.h"
-#include "gamepersistent.h"
+#include "../GameMtlLib.h"
+#include "Level.h"
+#include "GamePersistent.h"
 #include "Extendedgeom.h"
 #include "PhysicsGamePars.h"
 #include "PhysicsCommon.h"
@@ -62,101 +62,101 @@ class CPHWallMarksCall :
 	CDB::TRI* T;
 public:
 	//CPHWallMarksCall(const Fvector &p,CDB::TRI* Tri,ref_shader s)
-	CPHWallMarksCall(const Fvector &p, CDB::TRI* Tri, const wm_shader &s)
+	CPHWallMarksCall(const Fvector &p,CDB::TRI* Tri,const wm_shader &s)
 	{
-		pWallmarkShader = s;
+		pWallmarkShader=s;
 		pos.set(p);
-		T = Tri;
+		T=Tri;
 	}
-	virtual void 			run()
+	virtual void 			run								()
 	{
 		//добавить отметку на материале
-		::Render->add_StaticWallmark(pWallmarkShader, pos,
+		::Render->add_StaticWallmark(pWallmarkShader,pos, 
 			0.09f, T,
 			Level().ObjectSpace.GetStaticVerts());
 	};
-	virtual bool 			obsolete()const { return false; }
+	virtual bool 			obsolete						()const{return false;}
 };
 
 
 
 
 template<class Pars>
-void  TContactShotMark(CDB::TRI* T, dContactGeom* c)
+void  TContactShotMark(CDB::TRI* T,dContactGeom* c)
 {
-	dBodyID b = dGeomGetBody(c->g1);
+	dBodyID b=dGeomGetBody(c->g1);
 	dxGeomUserData* data;
-	bool b_invert_normal = false;
-	if (!b)
+	bool b_invert_normal=false;
+	if(!b) 
 	{
-		b = dGeomGetBody(c->g2);
-		data = dGeomGetUserData(c->g2);
-		b_invert_normal = true;
+		b=dGeomGetBody(c->g2);
+		data=dGeomGetUserData(c->g2);
+		b_invert_normal=true;
 	}
 	else
 	{
-		data = dGeomGetUserData(c->g1);
+		data=dGeomGetUserData(c->g1);
 	}
-	if (!b) return;
+	if(!b) return;
 	dVector3 vel;
 	dMass m;
-	dBodyGetMass(b, &m);
-	dBodyGetPointVel(b, c->pos[0], c->pos[1], c->pos[2], vel);
-	dReal vel_cret = dFabs(dDOT(vel, c->normal))* _sqrt(m.mass);
-	Fvector to_camera; to_camera.sub(cast_fv(c->pos), Device.vCameraPosition);
-	float square_cam_dist = to_camera.square_magnitude();
-	if (data)
+	dBodyGetMass(b,&m);
+	dBodyGetPointVel(b,c->pos[0],c->pos[1],c->pos[2],vel);
+	dReal vel_cret=dFabs(dDOT(vel,c->normal))* _sqrt(m.mass);
+	Fvector to_camera;to_camera.sub(cast_fv(c->pos),Device.vCameraPosition);
+	float square_cam_dist=to_camera.square_magnitude();
+	if(data)
 	{
-		SGameMtlPair* mtl_pair = GMLib.GetMaterialPair(T->material, data->material);
-		if (mtl_pair)
+		SGameMtlPair* mtl_pair		= GMLib.GetMaterialPair(T->material,data->material);
+		if(mtl_pair)
 		{
 			//if(vel_cret>Pars.vel_cret_wallmark && !mtl_pair->CollideMarks.empty())
-			if (vel_cret>Pars::vel_cret_wallmark && !mtl_pair->m_pCollideMarks->empty())
+			if(vel_cret>Pars::vel_cret_wallmark && !mtl_pair->m_pCollideMarks->empty())
 			{
 				//ref_shader pWallmarkShader = mtl_pair->CollideMarks[::Random.randI(0,mtl_pair->CollideMarks.size())];
 				wm_shader WallmarkShader = mtl_pair->m_pCollideMarks->GenerateWallmark();
 				//ref_shader pWallmarkShader = mtl_pair->CollideMarks[::Random.randI(0,mtl_pair->CollideMarks.size())];
-				Level().ph_commander().add_call(new CPHOnesCondition(), new CPHWallMarksCall(*((Fvector*)c->pos), T, WallmarkShader));
+				Level().ph_commander().add_call(new CPHOnesCondition(),new CPHWallMarksCall( *((Fvector*)c->pos),T,WallmarkShader));
 			}
-			////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-			if (square_cam_dist<SQUARE_SOUND_EFFECT_DIST)
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+			if(square_cam_dist<SQUARE_SOUND_EFFECT_DIST)
 			{
-
-				SGameMtl* static_mtl = GMLib.GetMaterialByIdx(T->material);
-				if (!static_mtl->Flags.test(SGameMtl::flPassable))
+			
+				SGameMtl* static_mtl =  GMLib.GetMaterialByIdx(T->material);
+				if(!static_mtl->Flags.test(SGameMtl::flPassable))
 				{
-					if (vel_cret>Pars::vel_cret_sound)
+					if(vel_cret>Pars::vel_cret_sound)
 					{
-						if (!mtl_pair->CollideSounds.empty())
+						if(!mtl_pair->CollideSounds.empty())
 						{
-							float volume = collide_volume_min + vel_cret*(collide_volume_max - collide_volume_min) / (_sqrt(mass_limit)*default_l_limit - Pars::vel_cret_sound);
-							GET_RANDOM(mtl_pair->CollideSounds).play_no_feedback(0, 0, 0, ((Fvector*)c->pos), &volume);
+							float volume=collide_volume_min+vel_cret*(collide_volume_max-collide_volume_min)/(_sqrt(mass_limit)*default_l_limit-Pars::vel_cret_sound);
+							GET_RANDOM(mtl_pair->CollideSounds).play_no_feedback(0,0,0,((Fvector*)c->pos),&volume);
 						}
 					}
 				}
 				else
 				{
-					if (data->ph_ref_object && !mtl_pair->CollideSounds.empty())
+					if(data->ph_ref_object&&!mtl_pair->CollideSounds.empty())
 					{
-						CPHSoundPlayer* sp = NULL;
-						sp = data->ph_ref_object->ph_sound_player();
-						if (sp) sp->Play(mtl_pair, *(Fvector*)c->pos);
+						CPHSoundPlayer* sp=NULL;
+						sp=data->ph_ref_object->ph_sound_player();
+						if(sp) sp->Play(mtl_pair,*(Fvector*)c->pos);
 					}
 				}
 			}
-			////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-			if (square_cam_dist<SQUARE_PARTICLE_EFFECT_DIST)
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+			if(square_cam_dist<SQUARE_PARTICLE_EFFECT_DIST)
 			{
-				if (vel_cret>Pars::vel_cret_particles && !mtl_pair->CollideParticles.empty())
+				if(vel_cret>Pars::vel_cret_particles && !mtl_pair->CollideParticles.empty())
 				{
-					LPCSTR ps_name = *mtl_pair->CollideParticles[::Random.randI(0, mtl_pair->CollideParticles.size())];
+					LPCSTR ps_name = *mtl_pair->CollideParticles[::Random.randI(0,mtl_pair->CollideParticles.size())];
 					//отыграть партиклы столкновения материалов
-					Level().ph_commander().add_call(new CPHOnesCondition(), new CPHParticlesPlayCall(*c, b_invert_normal, ps_name));
+					Level().ph_commander().add_call(new CPHOnesCondition(),new CPHParticlesPlayCall(*c,b_invert_normal,ps_name));
 				}
 			}
 		}
 	}
-}
+ }
 
 
 ContactCallbackFun *ContactShotMark = &TContactShotMark<EffectPars>;

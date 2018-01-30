@@ -51,6 +51,9 @@ public:
 	xr_vector<ISpatial*>		r_spatial;
 public:
 	u64							m_steps_num													;
+private:
+	u16							m_steps_short_num											;
+public:
 	double						m_frame_sum													;
 	dReal						m_previous_frame_time										;
 	bool						b_frame_mark												;
@@ -92,6 +95,7 @@ IC	bool						Processing						()							{return b_processing;}
 	u32							CalcNumSteps					(u32 dTime)					;
 	u16							ObjectsNumber					()							;
 	u16							UpdateObjectsNumber				()							;
+IC	u16							StepsShortCnt					()							{return m_steps_short_num;}
 	void						NetRelcase						(CPhysicsShell* s)			;
 	void						AddCall							(CPHCondition*c,CPHAction*a);
 #ifdef DEBUG

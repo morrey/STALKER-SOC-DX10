@@ -10,13 +10,21 @@
 #include "Hudmanager.h"
 
 #include "debug_renderer.h"
+#include "physicsshellholder.h"
+
+#include "../xrRender/Kinematics.h"
+#include "../xrRender/KinematicsAnimated.h"
+#include "../bone.h"
+#include "../IPHdebug.h"
+#include "phelement.h"
 
 Flags32		ph_dbg_draw_mask						;
 Flags32		ph_dbg_draw_mask1						;
 bool		draw_frame=0;
 
-LPCSTR	dbg_trace_object						=NULL;
-string64 s_dbg_tsrace_obj						;
+//LPCSTR	dbg_trace_object_name					=NULL;
+string64 s_dbg_trace_obj_name					="none";
+CObject	 *trace_object							= NULL;
 u32	 	dbg_bodies_num							=0;
 u32	 	dbg_joints_num							=0;
 u32	 	dbg_islands_num							=0;
@@ -27,28 +35,83 @@ u32	 	dbg_total_saved_tries					=0;
 u32	 	dbg_reused_queries_per_step				=0;
 u32	 	dbg_new_queries_per_step				=0;
 float	dbg_vel_collid_damage_to_display		=7.f;
-#ifdef DRAW_CONTACTS
-CONTACT_VECTOR Contacts0;
-CONTACT_VECTOR Contacts1;
-#endif
 
-PHOBJ_DBG_V	dbg_draw_objects0;
-PHOBJ_DBG_V	dbg_draw_objects1;
+float	dbg_text_height_scale					=1.f;
+float	dbg_text_current_height_scale			=1.f;
+
 
 PHABS_DBG_V	dbg_draw_abstruct0;
 PHABS_DBG_V	dbg_draw_abstruct1;
 
 PHABS_DBG_V	dbg_draw_cashed;
+PHABS_DBG_V	dbg_draw_cashed_secondary;
 PHABS_DBG_V	dbg_draw_simple;
 
 enum		EDBGPHDrawMode
 {
 	dmSecondaryThread,
 	dmCashed,
+	dmCashedSecondary,
 	dmSimple
 } dbg_ph_draw_mode=dmSecondaryThread;
 u32			cash_draw_remove_time=u32(-1);
 
+struct SPHObjDBGDraw:public SPHDBGDrawAbsract
+{
+	
+	SPHObjDBGDraw(const CPHObject* obj)
+	{
+		AABB.set(obj->AABB);
+		AABB_center.set(obj->spatial.sphere.P);
+	}
+	void render		( )
+	{
+			Level().debug_renderer().draw_aabb(AABB_center,AABB.x,AABB.y,AABB.z,color_xrgb(255,0,0));
+	}
+	Fvector AABB;
+	Fvector AABB_center;
+};
+void DBG_DrawPHObject(const CPHObject* obj)
+{
+	DBG_DrawPHAbstruct(new SPHObjDBGDraw( obj ));
+}
+struct SPHContactDBGDraw :public SPHDBGDrawAbsract
+{
+	int geomClass;
+	Fvector norm;
+	Fvector pos;
+	float depth;
+	SPHContactDBGDraw(const dContact& c)
+	{
+		
+		if(dGeomGetBody(c.geom.g1))
+		{
+			geomClass =dGeomGetClass(retrieveGeom(c.geom.g1));
+		}
+		else
+		{
+			geomClass=dGeomGetClass(retrieveGeom(c.geom.g2));
+		}
+		norm.set(cast_fv(c.geom.normal));
+		pos.set(cast_fv(c.geom.pos));
+		depth=c.geom.depth;
+	}
+	void render		( )
+	{
+			bool is_cyl= (geomClass==dCylinderClassUser);
+			Level().debug_renderer().draw_aabb			(pos,.01f,.01f,.01f,color_xrgb(255*is_cyl,0,255*!is_cyl));
+			Fvector dir;
+			dir.set(norm);
+			dir.mul(depth*100.f);
+			dir.add(pos);
+			Level().debug_renderer().draw_line(Fidentity,pos,dir,color_xrgb(255*is_cyl,0,255*!is_cyl));
+	}
+};
+
+void DBG_DrawContact(const dContact& c)
+{
+	DBG_DrawPHAbstruct(new SPHContactDBGDraw( c ));
+}
 
 struct SPHDBGDrawTri :public SPHDBGDrawAbsract
 {
@@ -82,8 +145,8 @@ struct SPHDBGDrawTri :public SPHDBGDrawAbsract
 	{
 		if(solid)
 		{
-			RCache.dbg_DrawTRI	(Fidentity, v[0], v[1], v[2], c );
-			RCache.dbg_DrawTRI	(Fidentity, v[2], v[1], v[0], c );
+			DRender->dbg_DrawTRI	(Fidentity, v[0], v[1], v[2], c );
+			DRender->dbg_DrawTRI	(Fidentity, v[2], v[1], v[0], c );
 		} else {
 			Level().debug_renderer().draw_line(Fidentity,v[0],v[1],c);
 			Level().debug_renderer().draw_line(Fidentity,v[1],v[2],c);
@@ -104,13 +167,17 @@ static void clear_vector(PHABS_DBG_V& v)
 
 void DBG_DrawTri(CDB::RESULT* T,u32 c)
 {
-	DBG_DrawPHAbstruct(xr_new<SPHDBGDrawTri>(T,c));
+	DBG_DrawPHAbstruct(new SPHDBGDrawTri(T,c));
 }
 void DBG_DrawTri(CDB::TRI* T,const Fvector* V_verts,u32 c)
 {
-	DBG_DrawPHAbstruct(xr_new<SPHDBGDrawTri>(T,V_verts,c));
+	DBG_DrawPHAbstruct(new SPHDBGDrawTri(T,V_verts,c));
 }
 
+void DBG_DrawTri( const Fvector& v0, const Fvector& v1, const Fvector& v2, u32 ac, bool solid )
+{
+	DBG_DrawPHAbstruct(new SPHDBGDrawTri( v0, v1, v2, ac, solid ));
+}
 
 struct SPHDBGDrawLine : public SPHDBGDrawAbsract
 {
@@ -127,16 +194,16 @@ struct SPHDBGDrawLine : public SPHDBGDrawAbsract
 
 void DBG_DrawLine ( const Fvector& p0, const Fvector& p1, u32 c )
 {
-	DBG_DrawPHAbstruct( xr_new<SPHDBGDrawLine>( p0, p1, c ) );
+	DBG_DrawPHAbstruct( new SPHDBGDrawLine( p0, p1, c ) );
 }
 void DBG_DrawMatrix( const Fmatrix &m, float size, u8 a/* = 255*/ )
 {
 	Fvector to;to.add( m.c,Fvector( ).mul( m.i, size ) );
-	DBG_DrawPHAbstruct( xr_new<SPHDBGDrawLine>( m.c, to, D3DCOLOR_XRGB(a, 0, 0 ) ) );
+	DBG_DrawPHAbstruct( new SPHDBGDrawLine( m.c, to, color_xrgb(a, 0, 0 ) ) );
 	to.add(m.c,Fvector( ).mul( m.j, size ) );
-	DBG_DrawPHAbstruct( xr_new<SPHDBGDrawLine>( m.c, to, D3DCOLOR_XRGB(0, a, 0 ) ) );
+	DBG_DrawPHAbstruct( new SPHDBGDrawLine( m.c, to, color_xrgb(0, a, 0 ) ) );
 	to.add(m.c,Fvector( ).mul( m.k, size ) );
-	DBG_DrawPHAbstruct( xr_new<SPHDBGDrawLine>( m.c, to, D3DCOLOR_XRGB(0, 0, a ) ) );
+	DBG_DrawPHAbstruct( new SPHDBGDrawLine( m.c, to, color_xrgb(0, 0, a ) ) );
 }
 
 template<int>
@@ -179,7 +246,7 @@ void DBG_DrawRotation( float ang0, float ang1, const Fmatrix& m, const Fvector &
 		mm.mulB_43( r );
 		mm.transform_dir( tmp, ln );
 		Fvector to1; to1.add( from, tmp );
-		DBG_DrawPHAbstruct( xr_new<SPHDBGDrawTri>( from, to0, to1, ac, solid ) );
+		DBG_DrawPHAbstruct( new SPHDBGDrawTri( from, to0, to1, ac, solid ) );
 	}
 }
 
@@ -214,7 +281,7 @@ struct SPHDBGDrawAABB :public SPHDBGDrawAbsract
 
 void DBG_DrawAABB(const Fvector& center,const Fvector& AABB,u32 c)
 {
-	DBG_DrawPHAbstruct(xr_new<SPHDBGDrawAABB>(center,AABB,c));
+	DBG_DrawPHAbstruct(new SPHDBGDrawAABB(center,AABB,c));
 }
 
 struct SPHDBGDrawOBB: public SPHDBGDrawAbsract
@@ -229,10 +296,17 @@ struct SPHDBGDrawOBB: public SPHDBGDrawAbsract
 		Level().debug_renderer().draw_obb(m,h,c);
 	}
 };
+
 void DBG_DrawOBB(const Fmatrix& m,const Fvector h,u32 c)
 {
-	DBG_DrawPHAbstruct(xr_new<SPHDBGDrawOBB>(m,h,c));
+	DBG_DrawPHAbstruct(new SPHDBGDrawOBB(m,h,c));
 };
+void DBG_DrawOBB( const Fobb &b,u32 c)
+{
+	Fmatrix m;
+	b.xform_get( m );
+	DBG_DrawOBB( m, b.m_halfsize, c );
+}
 struct SPHDBGDrawPoint :public SPHDBGDrawAbsract
 {
 	Fvector p;float size;u32 c;
@@ -249,33 +323,76 @@ struct SPHDBGDrawPoint :public SPHDBGDrawAbsract
 };
 void DBG_DrawPoint(const Fvector& p,float size,u32 c)
 {
-	DBG_DrawPHAbstruct(xr_new<SPHDBGDrawPoint>(p,size,c));
+	DBG_DrawPHAbstruct(new SPHDBGDrawPoint(p,size,c));
 }
 
 struct SPHDBGOutText : public SPHDBGDrawAbsract
 {
-string64 s;
+string1024 s;
 bool	 rendered;
 	SPHDBGOutText(LPCSTR t)
 	{
-		strcpy(s,t);
+		strcpy_s(s,t);
 		rendered=false;
 	}
 	virtual void render()
 	{
 		//if(rendered) return;
+		if(!fsimilar (dbg_text_current_height_scale,dbg_text_height_scale ) )
+		{
+			HUD().Font().pFontStat->SetHeight(HUD().Font().pFontStat->GetHeight() * dbg_text_height_scale/dbg_text_current_height_scale );
+			dbg_text_current_height_scale = dbg_text_height_scale;
+		}
 		HUD().Font().pFontStat->OutNext(s);
 		rendered=true;
 	}
 };
+
 void _cdecl DBG_OutText(LPCSTR s,...)
 {
-	string64 t;
+	string1024 t;
 	va_list   marker;
 	va_start  (marker,s);
 	vsprintf(t,s,marker);
 	va_end    (marker);
-	DBG_DrawPHAbstruct(xr_new<SPHDBGOutText>(t));
+	DBG_DrawPHAbstruct(new SPHDBGOutText(t));
+}
+struct SPHDBGTextSetColor : public SPHDBGDrawAbsract
+{
+u32 color;
+
+	SPHDBGTextSetColor(u32 c): color( c )
+	{
+		
+	}
+	virtual void render()
+	{
+		HUD().Font().pFontStat->SetColor( color );
+	}
+};
+
+void DBG_TextSetColor( u32 color )
+{
+	DBG_DrawPHAbstruct( new SPHDBGTextSetColor( color ) );
+}
+
+struct SPHDBGTextOutSet : public SPHDBGDrawAbsract
+{
+	float x,y;
+
+	SPHDBGTextOutSet( float _x, float _y ): x( _x ), y(_y)
+	{
+		
+	}
+	virtual void render()
+	{
+		HUD().Font().pFontStat->OutSet( x, y );
+	}
+};
+
+void DBG_TextOutSet( float x, float y )
+{
+	DBG_DrawPHAbstruct( new SPHDBGTextOutSet( x, y ) );
 }
 
 void DBG_OpenCashedDraw()
@@ -290,15 +407,19 @@ void DBG_ClosedCashedDraw(u32 remove_time)
 
 IC void push( PHABS_DBG_V &v, SPHDBGDrawAbsract* a )
 {
-	if( v.size() < 500 )
+	//if( v.size() < 1500 )
 				v.push_back(a);
 }
 void DBG_DrawPHAbstruct(SPHDBGDrawAbsract* a)
 {
-	if(dbg_ph_draw_mode!=dmCashed)
+	if( dbg_ph_draw_mode!=dmCashed && dbg_ph_draw_mode!=dmCashedSecondary )
 	{
-		if(ph_world->Processing()) dbg_ph_draw_mode=dmSecondaryThread;
-		else					   dbg_ph_draw_mode=dmSimple;
+		if(ph_world->Processing()) dbg_ph_draw_mode = dmSecondaryThread;
+		else					   dbg_ph_draw_mode = dmSimple;
+	} else
+	{
+		if(ph_world->Processing()) dbg_ph_draw_mode = dmCashedSecondary;
+		else					   dbg_ph_draw_mode = dmCashed;
 	}
 	switch (dbg_ph_draw_mode)
 	{
@@ -309,9 +430,10 @@ void DBG_DrawPHAbstruct(SPHDBGDrawAbsract* a)
 			}else
 			{
 				push( dbg_draw_abstruct1, a );
-			};										break;	
-		case dmCashed:	push( dbg_draw_cashed, a );break;
-		case dmSimple:	push( dbg_draw_simple, a );break;
+			};											break;	
+		case dmCashed:			push( dbg_draw_cashed, a );				break;
+		case dmCashedSecondary: push( dbg_draw_cashed_secondary, a );	break;
+		case dmSimple:			push( dbg_draw_simple, a );				break;
 	}
 
 }
@@ -357,7 +479,11 @@ void DBG_PHAbstructRender()
 	
 	for(;e!=i;++i)
 	{
-		(*i)->render();
+		if(!(*i))
+		{
+		}
+		else
+			(*i)->render();
 	}
 	if(dbg_ph_draw_mode!=dmCashed)
 	{
@@ -365,7 +491,7 @@ void DBG_PHAbstructRender()
 		i=dbg_draw_cashed.begin();e=dbg_draw_cashed.end();
 		for(;e!=i;++i)
 		{
-				(*i)->render();
+			(*i)->render();
 		}
 		if(cash_draw_remove_time<Device.dwTimeGlobal)
 		{
@@ -379,77 +505,42 @@ void DBG_PHAbstructRender()
 		{
 			(*i)->render();
 		}
-		clear_vector(dbg_draw_simple);
+		//clear_vector(dbg_draw_simple);
 	}
 	//capped_cylinder_ray_collision_test();
 }
-
+static void DBG_DrawTarckObj();
+static u32 previous_frame = u32(-1);
+void DBG_RenderUpdate( )
+{
+	if( Device.Paused() || Device.dwFrame == previous_frame || !(Device.fTimeDelta>EPS_S) )
+		return;
+	draw_frame=!draw_frame;
+	clear_vector(dbg_draw_simple);
+	previous_frame = Device.dwFrame;
+	dbg_draw_cashed.insert(dbg_draw_cashed.end(), dbg_draw_cashed_secondary.begin(), dbg_draw_cashed_secondary.end());
+	dbg_draw_cashed_secondary.clear();
+	DBG_DrawTarckObj();
+}
 void DBG_PHAbstructClear()
 {
 	DBG_PHAbstruactStartFrame(true);
 	DBG_PHAbstruactStartFrame(false);
 	clear_vector(dbg_draw_cashed);
+	clear_vector(dbg_draw_cashed_secondary);
 	clear_vector(dbg_draw_simple);
 }
 
-void DBG_DrawPHObject(CPHObject* obj)
+void DBG_CashedClear()
 {
-	if(ph_dbg_draw_mask.test(phDbgDrawEnabledAABBS))
-	{
-		SPHObjDBGDraw obj_draw;
-		obj_draw.AABB.set(obj->AABB);
-		obj_draw.AABB_center.set(obj->spatial.sphere.P);
-		if(draw_frame)
-		{
-			dbg_draw_objects0.push_back(obj_draw);
-		}else
-		{
-			dbg_draw_objects1.push_back(obj_draw);
-		}
-	}
+	clear_vector(dbg_draw_cashed);
+	clear_vector(dbg_draw_cashed_secondary);
 }
-void DBG_DrawContact(dContact& c)
-{
-#ifdef DRAW_CONTACTS
 
-	SPHContactDBGDraw dbc;
-	if(dGeomGetBody(c.geom.g1))
-	{
-		dbc.geomClass =dGeomGetClass(retrieveGeom(c.geom.g1));
-	}
-	else
-	{
-		dbc.geomClass=dGeomGetClass(retrieveGeom(c.geom.g2));
-	}
-	dbc.norm.set(cast_fv(c.geom.normal));
-	dbc.pos.set(cast_fv(c.geom.pos));
-	dbc.depth=c.geom.depth;
-	if(ph_dbg_draw_mask.test(phDbgDrawContacts))
-	{
-		if(draw_frame)Contacts0.push_back(dbc);
-		else		  Contacts1.push_back(dbc);
-	}
-#endif
-}
+
+
 void DBG_DrawFrameStart()
 {
-	
-	if(draw_frame)
-	{
-#ifdef DRAW_CONTACTS
-		Contacts0.clear();
-#endif
-		dbg_draw_objects0.clear();
-		dbg_draw_abstruct0.clear();
-	}
-	else
-	{
-#ifdef DRAW_CONTACTS
-		Contacts1.clear();
-#endif
-		dbg_draw_objects1.clear();
-		dbg_draw_abstruct1.clear();
-	}
 	DBG_PHAbstruactStartFrame(draw_frame);
 
 	dbg_tries_num								=0;
@@ -460,73 +551,22 @@ void DBG_DrawFrameStart()
 void PH_DBG_Clear()
 {
 	DBG_PHAbstructClear();
-	dbg_draw_objects0.clear();
-	dbg_draw_objects1.clear();
-#ifdef DRAW_CONTACTS
-	Contacts0.clear();
-	Contacts1.clear();
-#endif
+	dbg_text_current_height_scale = 1.f;
 }
 
 void PH_DBG_Render()
 {
-	if(ph_dbg_draw_mask.test(phDbgDrawZDisable))CHK_DX(HW.pDevice->SetRenderState(D3DRS_ZENABLE,0));
+	if(ph_dbg_draw_mask.test(phDbgDrawZDisable))
+		DRender->ZEnable(false);
+		//CHK_DX(HW.pDevice->SetRenderState(D3DRS_ZENABLE,0));
 	HUD().Font().pFontStat->OutSet	(550,250);
-
-	if(ph_dbg_draw_mask.test(phDbgDrawEnabledAABBS))
-	{
-		PHOBJ_DBG_I i,e;
-		if(!draw_frame)
-		{
-			i=dbg_draw_objects0.begin();
-			e=dbg_draw_objects0.end();
-		}else
-		{
-			i=dbg_draw_objects1.begin();
-			e=dbg_draw_objects1.end();
-		}
-		for(;e!=i;++i)
-		{
-			SPHObjDBGDraw& ds=*i;
-			Level().debug_renderer().draw_aabb(ds.AABB_center,ds.AABB.x,ds.AABB.y,ds.AABB.z,D3DCOLOR_XRGB(255,0,0));
-		}
-	}
-
 	DBG_PHAbstructRender();
 
-#ifdef DRAW_CONTACTS
+	if(ph_dbg_draw_mask.test(phDbgDrawZDisable))
+		DRender->ZEnable(true);
+		//CHK_DX(HW.pDevice->SetRenderState(D3DRS_ZENABLE,1));
 
-	if(ph_dbg_draw_mask.test(phDbgDrawContacts))
-	{
-	
-		CONTACT_I i,e;
-		if(!draw_frame)
-		{
-			i=Contacts0.begin();
-			e=Contacts0.end();
-		}
-		else
-		{
-			i=Contacts1.begin();
-			e=Contacts1.end();
-		}
-
-		for(;i!=e;i++)
-		{
-			SPHContactDBGDraw &c=*i;
-			bool is_cyl=c.geomClass==dCylinderClassUser;
-			Level().debug_renderer().draw_aabb			(c.pos,.01f,.01f,.01f,D3DCOLOR_XRGB(255*is_cyl,0,255*!is_cyl));
-			Fvector dir;
-			dir.set(c.norm);
-			dir.mul(c.depth*100.f);
-			dir.add(c.pos);
-			Level().debug_renderer().draw_line(Fidentity,c.pos,dir,D3DCOLOR_XRGB(255*is_cyl,0,255*!is_cyl));
-		}
-	}
-//	HUD().Font().pFontStat->OutNext("---------------------");
-#endif
-
-	if(ph_dbg_draw_mask.test(phDbgDrawZDisable))CHK_DX(HW.pDevice->SetRenderState(D3DRS_ZENABLE,1));
+	//draw_frame=!draw_frame;
 }
 
 void DBG_DrawStatBeforeFrameStep()
@@ -584,7 +624,7 @@ void DBG_DrawStatAfterFrameStep()
 		DBG_OutText("------------------------------");
 
 	}
-	draw_frame=!draw_frame;
+	//draw_frame=!draw_frame;
 
 	
 }
@@ -602,7 +642,7 @@ CFunctionGraph::~CFunctionGraph()
 void CFunctionGraph::Init(type_function fun,float x0,float x1,int l, int t, int w, int h,int points_num/*=500*/,u32 color/*=*/,u32 bk_color)
 {
 	x_min=x0;x_max=x1;
-	m_stat_graph=xr_new<CStatGraph>();
+	m_stat_graph= new CStatGraph();
 	m_function=fun;
 	R_ASSERT(!m_function.empty()&&m_stat_graph);
 	R_ASSERT(x1>x0);
@@ -626,8 +666,8 @@ void CFunctionGraph::Init(type_function fun,float x0,float x1,int l, int t, int 
 		m_stat_graph->AppendItem(val,color);
 
 	}
-	//m_stat_graph->AddMarker(CStatGraph::stVert, 0, D3DCOLOR_XRGB(255, 0, 0));
-	//m_stat_graph->AddMarker(CStatGraph::stHor, 0, D3DCOLOR_XRGB(255, 0, 0));
+	//m_stat_graph->AddMarker(CStatGraph::stVert, 0, color_xrgb(255, 0, 0));
+	//m_stat_graph->AddMarker(CStatGraph::stHor, 0, color_xrgb(255, 0, 0));
 }
 
 void CFunctionGraph::AddMarker(CStatGraph::EStyle Style, float pos, u32 Color)
@@ -664,13 +704,359 @@ bool CFunctionGraph::IsActive()
 	return !!m_stat_graph;
 }
 
-LPCSTR PH_DBG_ObjectTrack()
+LPCSTR PH_DBG_ObjectTrackName()
 {
-	return dbg_trace_object;
+	return s_dbg_trace_obj_name;
 }
-void PH_DBG_SetTrackObject(LPCSTR obj)
+//extern ENGINE_API	IGame_Level*	g_pGameLevel;
+void PH_DBG_SetTrackObject()
 {
-	strcpy( s_dbg_tsrace_obj,obj);
-	dbg_trace_object=s_dbg_tsrace_obj;
+	
+//	strcpy_s( s_dbg_trace_obj_name,obj);
+//	dbg_trace_object_name=s_dbg_trace_obj_name;
+	if(g_pGameLevel)
+		trace_object = Level().Objects.FindObjectByName( PH_DBG_ObjectTrackName() );
+
 }
+
+static LPCSTR name_bool( BOOL v )
+{
+	static  xr_token token_bool[] = { { "false", 0 }, { "true", 1 } };
+	return get_token_name( token_bool, v );
+}
+
+static LPCSTR name_blend_type( CBlend::ECurvature blend )
+{
+	static xr_token token_blend[] = 
+	{
+		{"eFREE_SLOT"		, CBlend::eFREE_SLOT	},
+		{"eAccrue"			, CBlend::eAccrue		},
+		{"eFalloff"			, CBlend::eFalloff		},
+		{"eFORCEDWORD"		, CBlend::eFORCEDWORD	}
+	};
+	return get_token_name( token_blend, blend );
+}
+/*
+enum 
+{
+	dbg_track_obj_blends_bp_0			= 1<< 0,
+	dbg_track_obj_blends_bp_1			= 1<< 1,
+	dbg_track_obj_blends_bp_2			= 1<< 2,
+	dbg_track_obj_blends_bp_3			= 1<< 3,
+	dbg_track_obj_blends_motion_name	= 1<< 4,
+	dbg_track_obj_blends_time			= 1<< 5,
+	dbg_track_obj_blends_ammount		= 1<< 6,
+	dbg_track_obj_blends_mix_params		= 1<< 7
+	dbg_track_obj_blends_flags			= 1<< 8,
+	dbg_track_obj_blends_state			= 1<< 9,
+	dbg_track_obj_blends_dump			= 1<< 10
+};
+*/
+Flags32	dbg_track_obj_flags	={ u32(-1) & ~dbg_track_obj_blends_dump };
+void DBG_AnimBlend(IKinematicsAnimated &ka, const CBlend &B )
+{
+	//HUD().Font().pFontStat->SetHeight	(20.0f);
+
+	DBG_OutText("-------------------------------------");
+	if( dbg_track_obj_flags.test(dbg_track_obj_blends_motion_name) )
+	{
+		std::pair< LPCSTR, LPCSTR > motion = ka.LL_MotionDefName_dbg( B.motionID );
+		DBG_OutText("motion : name %s, set: %s ", motion.first, motion.second );
+	}
+	if( dbg_track_obj_flags.test(dbg_track_obj_blends_time) )
+		DBG_OutText( "time current: %f, time total: %f, frame %d ",B.timeCurrent, B.timeTotal, B.dwFrame  );
+
+	if( dbg_track_obj_flags.test(dbg_track_obj_blends_ammount) )
+		DBG_OutText( "ammount: %f, power: %f  ", B.blendAmount, B.blendPower  );
+
+	if( dbg_track_obj_flags.test(dbg_track_obj_blends_mix_params) )
+		DBG_OutText( "accrue: %f, fallof: %f, speed: %f ", B.blendAccrue, B.blendFalloff, B.speed ); 
+
+	if( dbg_track_obj_flags.test(dbg_track_obj_blends_flags) )
+		DBG_OutText( "bonepart: %d, channel: %d, stop_at_end: %s, fall_at_end: %s "
+			, B.bone_or_part, B.channel, name_bool( B.stop_at_end ), name_bool( B.fall_at_end ) );
+	if( dbg_track_obj_flags.test(dbg_track_obj_blends_state) )
+		DBG_OutText( "state: %s, playing: %s, stop_at_end_callback: %s ", name_blend_type( B.blend ), name_bool( B.playing ), name_bool( B.stop_at_end_callback ));
+	//DBG_OutText( "callback: %p callback param: %p", B.Callback, B.CallbackParam );
+	
+
+}
+
+void DBG_AnimPartState( IKinematicsAnimated &ka, u16 part )
+{
+	if( !dbg_track_obj_flags.test(1<<part) )
+		return;
+	DBG_OutText("=======================================");
+	const u16 n =(u16)ka.LL_PartBlendsCount( part );
+	DBG_OutText( "bone part : %d num blends: %d", part, n );
+	
+	for(u16 i = 0 ; i < n; ++i )
+		DBG_AnimBlend( ka, *ka.LL_PartBlend( part, i ) );
+	
+}
+void DBG_AnimState( IKinematicsAnimated &ka )
+{
+	
+	if( dbg_track_obj_flags.test(dbg_track_obj_blends_dump) )
+	{
+		ka.LL_DumpBlends_dbg();
+		dbg_track_obj_flags.set( dbg_track_obj_blends_dump, FALSE );
+	}
+	for(u16 i = 0; i<MAX_PARTS; ++ i )
+		DBG_AnimPartState( ka, i );
+		
+}
+
+static void DBG_DrawTarckObj()
+{
+	if(!ph_dbg_draw_mask1.test(ph_m1_DbgTrackObject))
+		return;
+	DBG_TextOutSet		(450,150);
+	DBG_OutText( "obj name: %s", PH_DBG_ObjectTrackName() );
+	
+	
+	if( !trace_object )
+	{
+		//trace_object= Level().Objects.FindObjectByName( PH_DBG_ObjectTrackName() );
+		PH_DBG_SetTrackObject();
+		if( !trace_object )
+		{
+			DBG_OutText( "obj name: %s not found", PH_DBG_ObjectTrackName() );
+			return;
+		}
+	}
+	
+	IRenderVisual * v = trace_object->Visual();
+	if( !v )
+		return;
+	DBG_OutText( "visual name: %s ", *trace_object->cNameVisual() );
+	IKinematics *k = smart_cast<IKinematics *>( v );
+	if( !k )
+		return;
+	IKinematicsAnimated* ka = smart_cast<IKinematicsAnimated*>( k );
+	if(!ka)
+		return;
+	DBG_AnimState( *ka );
+}
+
+void	DBG_DrawBones( const Fmatrix &xform,  IKinematics *K )
+{
+	u16 nbb = K->LL_BoneCount();
+	for(u16 i = 0; i < nbb; ++i )
+	{
+		CBoneInstance	&bi = K->LL_GetBoneInstance( i );
+		CBoneData		&bd = K->LL_GetData( i );
+		
+		Fmatrix bone_pos = bi.mTransform;
+		//K->Bone_GetAnimPos( bone_pos, i, u8(-1), false );
+
+		DBG_DrawMatrix( Fmatrix().mul_43( xform, bone_pos  ), 0.1 );
+
+
+		u16 bp = bd.GetParentID();
+		if( BI_NONE != bp )
+		{
+			CBoneInstance	&pbi = K->LL_GetBoneInstance( bp );
+			DBG_DrawLine( Fmatrix().mul_43( xform, bone_pos ).c, Fmatrix().mul_43( xform, pbi.mTransform ).c, color_xrgb( 255, 255, 0 ) );
+		}
+	}
+	DBG_DrawMatrix( xform, 1 );
+	DBG_DrawPoint( xform.c, 0.1, color_xrgb( 255, 125, 125 ) );
+
+}
+void	DBG_DrawBones( CObject &O )
+{
+	IKinematics *K = smart_cast<IKinematics*> ( O.Visual() );
+
+	//K->CalculateBones_Invalidate();
+	//K->CalculateBones();
+
+	VERIFY( K );
+	DBG_DrawBones(O.XFORM(), K );
+}
+void	DBG_PhysBones( CObject &O )
+{
+
+	CPhysicsShellHolder	*sh = smart_cast<CPhysicsShellHolder*>(&O);
+	VERIFY( sh );
+	CPhysicsShell* shell = sh->PPhysicsShell();
+	if(!shell)
+		return;
+	u16 nb_elements = shell->get_ElementsNumber();
+	for( u16 i= 0; i<nb_elements; ++i )
+	{
+		CPhysicsElement		*e	=  shell->get_ElementByStoreOrder(i);
+
+		DBG_DrawMatrix( e->XFORM(), 0.1f );//Fmatrix().mul_43( O.XFORM(),e->XFORM())
+		CPHElement* pE = smart_cast<CPHElement*>( e )->parent_element();
+		if( pE )
+			DBG_DrawLine( e->XFORM().c, pE->XFORM().c, color_xrgb( 255, 100, 0 ) );
+		
+	}
+
+}
+
+void	DBG_DrawBind( CObject &O )
+{
+	IKinematics *K = smart_cast<IKinematics*> ( O.Visual() );
+
+	
+	u16 nbb = K->LL_BoneCount();
+	xr_vector<Fmatrix> binds;
+	K->LL_GetBindTransform(binds) ;
+
+	for(u16 i = 0; i < nbb; ++i )
+	{
+	
+		CBoneData		&bd = K->LL_GetData( i );
+		
+		DBG_DrawMatrix( Fmatrix().mul_43( O.XFORM(), binds[i] ), 0.1, 100 );
+		u16 bp = bd.GetParentID();
+		if( BI_NONE != bp )
+		{
+			
+			DBG_DrawLine( Fmatrix().mul_43( O.XFORM(), binds[i] ).c, Fmatrix().mul_43( O.XFORM(),  binds[bp] ).c, color_xrgb( 0, 255, 255 ) );
+		}
+	}
+
+	
+	u16 bip01_bi = K->LL_BoneID( "bip01" );
+	if( bip01_bi != BI_NONE )
+		DBG_DrawPoint( Fmatrix().mul_43( O.XFORM(), binds[bip01_bi] ).c, 0.1, color_xrgb( 255, 255, 255 ) );
+}
+
+
+class cphdebug_impl: public IPhDebugRender
+{
+	 void	open_cashed_draw	()
+	{
+		DBG_OpenCashedDraw();
+	}
+	void	close_cashed_draw	( u32 remove_time)
+	{
+		DBG_ClosedCashedDraw	( remove_time );
+	}
+	void	draw_tri			( const Fvector &v0, const Fvector &v1, const Fvector &v2, u32 c, bool solid )	
+	{
+		DBG_DrawTri( v0, v1, v2, c, solid );
+	}
+public:
+	cphdebug_impl()
+	{
+		ph_debug_render = this;
+	}
+
+
+} ph_debug_render_impl;
+
+void DBG_PH_NetRelcase( CObject* obj )
+{
+	if( trace_object == obj )
+		trace_object = NULL;
+}
+
+bool is_trace_obj( CPHObject *obj )
+{
+	return trace_object && static_cast<CObject*>(obj->ref_object()) == trace_object;
+}
+
+
+void DBG_ObjBeforeCollision		( CPHObject *obj )
+{
+	if( is_trace_obj(obj) )
+		DBG_OpenCashedDraw();
+}
+void DBG_ObjAfterCollision		( CPHObject *obj )
+{
+	if( is_trace_obj(obj) )
+		DBG_ClosedCashedDraw(50000);
+}
+
+void DBG_ObjBeforePhTune		( CPHObject *obj )
+{
+
+}
+void DBG_ObjeAfterPhTune		( CPHObject *obj )
+{
+
+}
+Fvector dbg_trace_prev_pos = {0,0,0};
+void DBG_ObjBeforeStep			( CPHObject *obj )
+{
+	if( is_trace_obj(obj) )
+	{
+		DBG_OpenCashedDraw();
+		//dbg_draw_velocity	( 0.1f, color_xrgb( 255, 0, 0 ) ); 
+		if(obj->ref_object()->PPhysicsShell())
+		{
+			obj->ref_object()->PPhysicsShell()->dbg_draw_force		( 0.1f, color_xrgb( 0, 0, 255 ) ); 
+			Fmatrix form = Fidentity;
+			obj->ref_object()->PPhysicsShell()->GetGlobalTransformDynamic( &form );
+			dbg_trace_prev_pos.set( form.c );
+		}
+		
+	}
+}
+
+void DBG_ObjAfterStep			( CPHObject *obj )
+{
+	if( is_trace_obj(obj) )
+	{
+		
+		if(obj->ref_object()->PPhysicsShell())
+		{
+			obj->ref_object()->PPhysicsShell()->dbg_draw_velocity	( 0.1f, color_xrgb( 255, 0, 0 ) );
+		}
+		//dbg_draw_force		( 0.1f, color_xrgb( 0, 0, 255 ) ); 
+		
+	}
+}
+
+void DBG_ObjBeforePhDataUpdate	( CPHObject *obj )
+{
+
+}
+void DBG_ObjAfterPhDataUpdate	( CPHObject *obj )
+{
+		if(!is_trace_obj(obj))
+			return;
+			if( obj->ref_object()->PPhysicsShell())
+		{
+			Fmatrix form = Fidentity;
+			obj->ref_object()->PPhysicsShell()->GetGlobalTransformDynamic( &form );
+			DBG_DrawLine( dbg_trace_prev_pos, form.c,  color_xrgb( 255, 0, 0 )  );
+		}
+		DBG_ClosedCashedDraw( 50000 );
+	
+}
+
+
+std::string dump_string( LPCSTR name, const Fvector &v )
+{
+	return make_string( "%s : (%f,%f,%f) ", name, v.x, v.y, v.z );
+}
+
+void dump( LPCSTR name, const Fvector &v )
+{
+	Msg( "%s", dump_string( name, v ).c_str() );
+}
+
+std::string dump_string( LPCSTR name, const Fmatrix &form )
+{
+	return 
+	make_string( "%s, _14_=%f \n", dump_string( make_string( "%s.i, ", name ).c_str(), form.i ).c_str( ) , form._14_ )	+ 
+	make_string( "%s, _24_=%f \n", dump_string( make_string( "%s.j, ", name ).c_str(), form.j ).c_str( ) , form._24_ )	+  
+	make_string( "%s, _34_=%f \n", dump_string( make_string( "%s.k, ", name ).c_str(), form.k ).c_str( ) , form._34_  ) +  
+	make_string( "%s, _44_=%f \n", dump_string( make_string( "%s.c, ", name ).c_str(), form.c ).c_str( ) , form._44_ );  
+}
+
+void dump( LPCSTR name, const Fmatrix &form )
+{
+	Msg( "%s", dump_string( name, form ) );
+	//Msg( "%s, _14_=%f ", dump_string( make_string( "%s.i, ", name ).c_str(), form.i ).c_str( ) , form._14_ );  
+	//Msg( "%s, _24_=%f ", dump_string( make_string( "%s.j, ", name ).c_str(), form.j ).c_str( ) , form._24_ );  
+	//Msg( "%s, _34_=%f ", dump_string( make_string( "%s.k, ", name ).c_str(), form.k ).c_str( ) , form._34_  );  
+	//Msg( "%s, _44_=%f ", dump_string( make_string( "%s.c, ", name ).c_str(), form.c ).c_str( ) , form._44_ );  
+}
+
 #endif

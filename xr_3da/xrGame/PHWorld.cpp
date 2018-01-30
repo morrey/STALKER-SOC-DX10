@@ -7,7 +7,7 @@
 #include "ExtendedGeom.h"
 #include "draymotions.h"
 #include "PHCollideValidator.h"
-#include "../gamemtllib.h"
+#include "../GameMtlLib.h"
 #ifdef    DEBUG
 #	include "PHDebug.h"
 #endif
@@ -15,6 +15,18 @@
 #include "PHSimpleCalls.h"
 #include "PHSynchronize.h"
 #include "phnetstate.h"
+#include "geometrybits.h"
+
+#ifdef	DEBUG
+void DBG_ObjAfterPhDataUpdate	( CPHObject *obj );
+void DBG_ObjBeforePhDataUpdate	( CPHObject *obj );
+void DBG_ObjAfterStep			( CPHObject *obj );
+void DBG_ObjBeforeStep			( CPHObject *obj );
+void DBG_ObjeAfterPhTune		( CPHObject *obj );
+void DBG_ObjBeforePhTune		( CPHObject *obj );
+void DBG_ObjAfterCollision		( CPHObject *obj );
+void DBG_ObjBeforeCollision		( CPHObject *obj );
+#endif
 //////////////////////////////////////////////////////////////
 //////////////CPHMesh///////////////////////////////////////////
 ///////////////////////////////////////////////////////////
@@ -22,7 +34,7 @@ BOOL g_bDebugDumpPhysicsStep				=					0;
 
 void CPHMesh ::Create(dSpaceID space, dWorldID world){
 	Geom = dCreateTriList(space, 0, 0);
-	
+	CPHGeometryBits::init_geom( *this );
 }
 /////////////////////////////////////////////////////////////////////////
 
@@ -60,6 +72,7 @@ CPHWorld::CPHWorld()
 	m_previous_frame_time=0.f;
 	b_frame_mark=false;
 	m_steps_num=0;
+	m_steps_short_num = 0;
 	m_frame_sum=0.f;
 	m_delay=0; 
 	m_previous_delay=0;
@@ -93,7 +106,7 @@ void CPHWorld::Create()
 	if (psDeviceFlags.test(mtPhysics))	Device.seqFrameMT.Add	(this,REG_PRIORITY_HIGH);
 	else								Device.seqFrame.Add		(this,REG_PRIORITY_LOW);
 	
-	m_commander							=xr_new<CPHCommander>();
+	m_commander							= new CPHCommander();
 	//dVector3 extensions={2048,256,2048};
 	/*
 	Fbox	level_box		=	Level().ObjectSpace.GetBoundingVolume();
@@ -176,14 +189,14 @@ void CPHWorld::OnFrame()
 	Device.Statistic->TEST0.End			();
 	*/
 #ifdef DEBUG 
-	DBG_DrawFrameStart();
-	DBG_DrawStatBeforeFrameStep();
+	//DBG_DrawFrameStart();
+	//DBG_DrawStatBeforeFrameStep();
 #endif
 	Device.Statistic->Physics.Begin		();
 	FrameStep							(Device.fTimeDelta);
 	Device.Statistic->Physics.End		();
 #ifdef DEBUG
-	DBG_DrawStatAfterFrameStep();
+	//DBG_DrawStatAfterFrameStep();
 
 #endif
 }
@@ -213,24 +226,36 @@ void CPHWorld::Step()
 			++i_object;
 		}
 	}
-	--disable_count;
+	if(!IsFreezed())
+		--disable_count;
 
 	++m_steps_num;
+	++m_steps_short_num;
 	Device.Statistic->ph_collision.Begin	();
+
 
 	for(i_object=m_objects.begin();m_objects.end() != i_object;)
 	{
 		CPHObject* obj=(*i_object);
+#ifdef	DEBUG
+		DBG_ObjBeforeCollision( obj );
+#endif
 		obj->Collide();
-
+#ifdef	DEBUG
+		DBG_ObjAfterCollision( obj );
+#endif
 		++i_object;
 	}
+
+
+
 	Device.Statistic->ph_collision.End	();
 
 #ifdef DEBUG
 	for(i_object=m_objects.begin();m_objects.end() != i_object;)
 	{
 		CPHObject* obj=(*i_object);
+		if( ph_dbg_draw_mask.test(phDbgDrawEnabledAABBS) )
 		DBG_DrawPHObject(obj);
 		++i_object;
 	}
@@ -240,7 +265,17 @@ void CPHWorld::Step()
 	{	
 		CPHObject* obj=(*i_object);
 		++i_object;
+
+#ifdef	DEBUG
+		DBG_ObjBeforePhTune( obj );
+#endif
+
 		obj->PhTune(fixed_step);
+
+#ifdef	DEBUG
+		DBG_ObjeAfterPhTune( obj );
+#endif
+
 	}
 
 	for(i_update_object=m_update_objects.begin();m_update_objects.end() != i_update_object;)
@@ -250,6 +285,7 @@ void CPHWorld::Step()
 	}
 
 	Device.Statistic->ph_core.Begin		();
+
 #ifdef DEBUG
 	dbg_bodies_num=0;
 	dbg_joints_num=0;
@@ -274,10 +310,18 @@ void CPHWorld::Step()
 		}
 #endif
 
+#ifdef	DEBUG
+		DBG_ObjBeforeStep( obj );
+#endif
 		obj->IslandStep(fixed_step);
+
+#ifdef	DEBUG
+		DBG_ObjAfterStep( obj );
+#endif
 	}
 
 	Device.Statistic->ph_core.End		();
+
 
 
 	for(i_object=m_objects.begin();m_objects.end() != i_object;)
@@ -285,15 +329,29 @@ void CPHWorld::Step()
 		CPHObject* obj=(*i_object);
 		++i_object;
 		obj->IslandReinit();
+
+#ifdef	DEBUG
+		DBG_ObjBeforePhDataUpdate( obj );
+#endif
+
 		obj->PhDataUpdate(fixed_step);
+
+#ifdef	DEBUG
+		DBG_ObjAfterPhDataUpdate( obj );
+#endif
+
 		obj->spatial_move();
 	}
 
 	for(i_update_object=m_update_objects.begin();m_update_objects.end() != i_update_object;)
-	{	CPHUpdateObject* obj=*i_update_object;
-	++i_update_object;
-	obj->PhDataUpdate(fixed_step);
+	{	
+		CPHUpdateObject* obj=*i_update_object;
+		++i_update_object;
+		obj->PhDataUpdate(fixed_step);
 	}
+
+
+
 #ifdef DEBUG
 	dbg_contacts_num=ContactGroup->num;
 #endif
@@ -308,8 +366,6 @@ void CPHWorld::Step()
 		physics_step_time_callback(start_time,start_time+u32(fixed_step*1000));	
 		start_time += u32(fixed_step*1000);
 	};
-
-
 }
 
 void CPHWorld::StepTouch()
@@ -390,12 +446,19 @@ void CPHWorld::FrameStep(dReal step)
 		return		;
 	}
 	//for(UINT i=0;i<(m_reduce_delay+1);++i)
+#ifdef DEBUG 
+	DBG_DrawFrameStart();
+	DBG_DrawStatBeforeFrameStep();
+#endif
 	b_processing=true;
 
 	start_time = Device.dwTimeGlobal;// - u32(m_frame_time*1000);
-	if(g_bDebugDumpPhysicsStep&&it_number>20)Msg("!!!TOO MANY PHYSICS STEPS PER FRAME = %d !!!",it_number);
+	if(g_bDebugDumpPhysicsStep&&it_number>20)Msg("! TOO MANY PHYSICS STEPS PER FRAME = %d !!!",it_number);
 	for(UINT i=0; i<it_number;++i)	Step();
 	b_processing=false;
+#ifdef DEBUG
+	DBG_DrawStatAfterFrameStep();
+#endif
 }
 
 void CPHWorld::AddObject(CPHObject* object){
@@ -440,12 +503,17 @@ void CPHWorld::Freeze()
 {
 	R_ASSERT2(!b_world_freezed,"already freezed!!!");
 	m_freezed_objects.move_items(m_objects);
+
 	PH_OBJECT_I iter=m_freezed_objects.begin(),
 		e=	m_freezed_objects.end()	;
-	
+
+
+
 	for(; e != iter;++iter)
 		(*iter)->FreezeContent();
+	
 	m_freezed_update_objects.move_items(m_update_objects);
+
 	b_world_freezed=true;
 }
 void CPHWorld::UnFreeze()
@@ -455,7 +523,9 @@ void CPHWorld::UnFreeze()
 		e=	m_freezed_objects.end()	;
 	for(; e != iter;++iter)
 		(*iter)->UnFreezeContent();
+
 	m_objects.move_items(m_freezed_objects);
+
 	m_update_objects.move_items(m_freezed_update_objects);
 	b_world_freezed=false;
 }
@@ -478,6 +548,15 @@ void CPHWorld::NetRelcase(CPhysicsShell *s)
 {
 	CPHReqComparerHasShell c(s);
 	m_commander->remove_calls(&c);
+
+	PH_UPDATE_OBJECT_I	i_update_object;
+	for(i_update_object=m_update_objects.begin();m_update_objects.end() != i_update_object;)
+	{	CPHUpdateObject* obj=(*i_update_object);
+		++i_update_object;
+		obj->NetRelcase( s );
+		//obj->PhTune(fixed_step);
+	}
+	
 }
 void CPHWorld::AddCall(CPHCondition*c,CPHAction*a)
 {

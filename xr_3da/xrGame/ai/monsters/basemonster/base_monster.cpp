@@ -178,7 +178,7 @@ void	CBaseMonster::Hit							(SHit* pHDS)
 
 void CBaseMonster::PHHit(float P,Fvector &dir, CObject *who,s16 element,Fvector p_in_object_space, float impulse, ALife::EHitType hit_type /*=ALife::eHitTypeWound*/)
 {
-	m_pPhysics_support->in_Hit(P,dir,who,element,p_in_object_space,impulse,hit_type);
+	m_pPhysics_support->in_Hit(SHit(P,dir,who,element,p_in_object_space,impulse,hit_type));
 }
 
 CPHDestroyable*	CBaseMonster::	ph_destroyable	()

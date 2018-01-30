@@ -196,7 +196,7 @@ public:
 
 	virtual	float				GetControlInertionFactor() const { return m_fControlInertionFactor; };
 
-protected:
+public:
 	virtual void				UpdateXForm();
 
 protected:

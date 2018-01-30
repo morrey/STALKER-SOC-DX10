@@ -69,7 +69,7 @@ void CPHShellSplitterHolder::PassEndSplitters(const CShellSplitInfo& spl_inf,CPH
 
 
 	CPHShellSplitterHolder*	&dest_holder=dest->m_spliter_holder;
-	if(!dest_holder)dest_holder=xr_new<CPHShellSplitterHolder>(dest);
+	if(!dest_holder)dest_holder= new CPHShellSplitterHolder(dest);
 
 	ELEMENT_STORAGE &source_elements=m_pShell->elements;
 	ELEMENT_STORAGE &dest_elements=dest->elements;
@@ -266,7 +266,8 @@ if(spl_inf.m_end_jt_num!=u16(-1))
 }
 
 static ELEMENT_PAIR_VECTOR new_elements;
-DEFINE_VECTOR(Fmatrix,TRANSFORM_VECTOR,TRANSFORM_I)
+using TRANSFORM_VECTOR = xr_vector<Fmatrix>;
+using TRANSFORM_I = TRANSFORM_VECTOR::iterator;
 static TRANSFORM_VECTOR bones_bind_forms;
 shell_root CPHShellSplitterHolder::ElementSingleSplit(const element_fracture &split_elem,const CPHElement* source_element)
 {
@@ -359,7 +360,7 @@ IC	void correct_diapasones(ELEMENT_PAIR_VECTOR& element_pairs)
 {
 	ELEMENT_PAIR_I i,b=element_pairs.begin(),e=element_pairs.end();
 
-	for(i =b;i!=e;++i)
+	for(i=b;i!=e;++i)
 	{
 		ELEMENT_PAIR_I j=i+1;
 		for(;j!=e;++j)

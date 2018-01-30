@@ -95,7 +95,7 @@ void CPHObject::Collide()
 				if(ph_dbg_draw_mask.test(phDbgDrawRayMotions))
 				{
 					DBG_OpenCashedDraw();
-					DBG_DrawLine(*from,Fvector().add(*from,Fvector().mul(dir,magnitude)),D3DCOLOR_XRGB(0,255,0));
+					DBG_DrawLine(*from,Fvector().add(*from,Fvector().mul(dir,magnitude)),color_xrgb(0,255,0));
 					DBG_ClosedCashedDraw(30000);
 				}
 
@@ -138,6 +138,7 @@ void	CPHObject::reinit_single()
 		CPHObject* obj=static_cast<CPHObject*>(*i);
 		obj->IslandReinit();
 	}
+	result.clear_not_free();
 	dJointGroupEmpty(ContactGroup);
 	ContactFeedBacks.empty();
 	ContactEffectors.empty();
@@ -168,6 +169,16 @@ bool	CPHObject::step_single(dReal	step)
 	reinit_single						();
 	return	ret							;
 }
+
+void		CPHObject::	step( float time ) //it is still not a true step for object because it collide the object only not subsequent collision is doing
+{
+	ph_world->r_spatial.clear_not_free	();
+	reinit_single						();
+	Collide								();
+	IslandStep						( time );
+	reinit_single						();
+}
+
 bool		CPHObject::	DoCollideObj	()
 {
 	CollideDynamics					();
@@ -243,4 +254,5 @@ void CPHUpdateObject::Deactivate()
 	ph_world->RemoveUpdateObject(this);
 	b_activated=false;
 }
+
 

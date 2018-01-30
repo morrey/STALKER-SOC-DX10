@@ -75,7 +75,7 @@ void CPHSimpleCharacter::UpdateDynamicDamage(dContact* c,u16 obj_material_idx,dB
 		float dbg_my_effective_e=Kself*m_collision_damage_factor;
 		float dbg_obj_effective_e=Kobj*object_damage_factor;
 		float dbg_free_energy=KK;
-		Msg("-----------------------------------------------------------------------------------------");
+		Msg("- ---------------------------------------------------------------------------------------");
 		Msg("cd %s -effective vell %f",		*PhysicsRefObject()->cName(),				c_vel);
 		Msg("cd %s -my_norm_vell %f",		*PhysicsRefObject()->cName(),				dbg_my_norm_vell);
 		Msg("cd %s -obj_norm_vell %f",		*PhysicsRefObject()->cName(),				dbg_obj_norm_vell);
@@ -86,7 +86,7 @@ void CPHSimpleCharacter::UpdateDynamicDamage(dContact* c,u16 obj_material_idx,dB
 		Msg("cd %s -effective_acceted_e %f",*PhysicsRefObject()->cName(),				accepted_energy);
 		Msg("cd %s -real_acceted_e %f",		*PhysicsRefObject()->cName(),				Kself+Kobj-KK);
 		Msg("cd %s -free_energy %f",		*PhysicsRefObject()->cName(),				dbg_free_energy);
-		Msg("-----------------------------------------------------------------------------------------");
+		Msg("- ---------------------------------------------------------------------------------------");
 		/*
 		static float dbg_my_norm_vell=0.f;
 		static float dbg_obj_norm_vell=0.f;
@@ -135,10 +135,20 @@ void CPHSimpleCharacter::UpdateDynamicDamage(dContact* c,u16 obj_material_idx,dB
 IC		void	CPHSimpleCharacter::foot_material_update(u16	contact_material_idx,u16	foot_material_idx)
 {
 	if(*p_lastMaterialIDX!=u16(-1)&&GMLib.GetMaterialByIdx( *p_lastMaterialIDX)->Flags.test(SGameMtl:: flPassable)&&!b_foot_mtl_check)	return			;
-	b_foot_mtl_check					=false											;
-	if(GMLib.GetMaterialByIdx(contact_material_idx)->Flags.test(SGameMtl:: flPassable))
-								*p_lastMaterialIDX=contact_material_idx					;
+	b_foot_mtl_check					=false									   ;
+
+	const SGameMtl* contact_material = GMLib.GetMaterialByIdx(contact_material_idx);
+
+	if(contact_material->Flags.test(SGameMtl::flPassable))
+	{
+		if(contact_material->Flags.test(SGameMtl::flInjurious))
+			injuriousMaterialIDX = contact_material_idx	;
+		else
+			*p_lastMaterialIDX	= contact_material_idx	;
+								
+	}
 	else	
 								*p_lastMaterialIDX=foot_material_idx					;
 
 }
+

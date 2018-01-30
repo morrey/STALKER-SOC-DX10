@@ -2,8 +2,7 @@
 #define PH_DEBUG_H
 #ifdef DEBUG
 struct dContact;
-//#include "FastDelegate.h"
-#include "../StatGraph.h"
+#include <xrEngine/StatGraph.h>
 #define DRAW_CONTACTS
 
 
@@ -22,18 +21,13 @@ extern	u32 			dbg_islands_num							;
 extern	u32 			dbg_contacts_num						;
 extern	float			dbg_vel_collid_damage_to_display		;
 extern	LPCSTR			dbg_trace_object						;
+class	CObject													;
+extern	CObject			*trace_object							;
 #ifdef DRAW_CONTACTS
 
-struct SPHContactDBGDraw
-{
-	int geomClass;
-	Fvector norm;
-	Fvector pos;
-	float depth;
-};
-DEFINE_VECTOR(SPHContactDBGDraw,CONTACT_VECTOR,CONTACT_I);
-extern CONTACT_VECTOR Contacts0;
-extern CONTACT_VECTOR Contacts1;
+
+//extern CONTACT_VECTOR Contacts0;
+//extern CONTACT_VECTOR Contacts1;
 #endif
 ///ph_dbg_draw_mask 
 enum
@@ -78,17 +72,29 @@ enum
 	ph_m1_DbgActorRestriction	=		1<<1,
 	phDbgIKOff					=		1<<2,
 	phDbgHitAnims				=		1<<3,
-	phDbgDrawIKLimits			=		1<<4
-};
-struct SPHObjDBGDraw
-{
-	Fvector AABB;
-	Fvector AABB_center;
+	phDbgDrawIKLimits			=		1<<4,
+	phDbgDrawIKPredict			=		1<<5,
+	phDbgDrawIKSHiftObject		=		1<<6,
+	phDbgDrawIKCollision		=		1<<7,
+	phDbgDrawIKBlending			=		1<<8
 };
 
-DEFINE_VECTOR( SPHObjDBGDraw, PHOBJ_DBG_V, PHOBJ_DBG_I );
-extern PHOBJ_DBG_V	dbg_draw_objects0;
-extern PHOBJ_DBG_V	dbg_draw_objects1;
+enum 
+{
+	dbg_track_obj_blends_bp_0			= 1<< 0,
+	dbg_track_obj_blends_bp_1			= 1<< 1,
+	dbg_track_obj_blends_bp_2			= 1<< 2,
+	dbg_track_obj_blends_bp_3			= 1<< 3,
+	dbg_track_obj_blends_motion_name	= 1<< 4,
+	dbg_track_obj_blends_time			= 1<< 5,
+	dbg_track_obj_blends_ammount		= 1<< 6,
+	dbg_track_obj_blends_mix_params		= 1<< 7,
+	dbg_track_obj_blends_flags			= 1<< 8,
+	dbg_track_obj_blends_state			= 1<< 9,
+	dbg_track_obj_blends_dump			= 1<< 10
+};
+//extern PHOBJ_DBG_V	dbg_draw_objects0;
+//extern PHOBJ_DBG_V	dbg_draw_objects1;
 class CPHObject;
 
 
@@ -97,16 +103,18 @@ struct SPHDBGDrawAbsract
 	virtual void				render				( )						=0;
 	virtual						~SPHDBGDrawAbsract	( )						{ };
 };
-DEFINE_VECTOR( SPHDBGDrawAbsract*, PHABS_DBG_V, PHABS_DBG_I )					;
+using PHABS_DBG_V = xr_vector<SPHDBGDrawAbsract*>;
+using PHABS_DBG_I  = PHABS_DBG_V::iterator;
 extern PHABS_DBG_V	dbg_draw_abstruct0;
 extern PHABS_DBG_V	dbg_draw_abstruct1;
 void DBG_DrawStatBeforeFrameStep( );
 void DBG_DrawStatAfterFrameStep( );
+void DBG_RenderUpdate( ); 
 void DBG_OpenCashedDraw( );
 void DBG_ClosedCashedDraw( u32 remove_time );
 void DBG_DrawPHAbstruct( SPHDBGDrawAbsract* a );
-void DBG_DrawPHObject( CPHObject *obj );
-void DBG_DrawContact ( dContact &c );
+void DBG_DrawPHObject( const CPHObject *obj );
+void DBG_DrawContact ( const dContact &c );
 void DBG_DrawTri( CDB::RESULT *T, u32 c );
 void DBG_DrawTri(CDB::TRI *T, const Fvector *V_verts, u32 c );
 void DBG_DrawLine( const Fvector &p0, const Fvector &p1, u32 c );
@@ -118,12 +126,23 @@ void DBG_DrawRotationX( const Fmatrix &m, float ang0, float ang1, float size, u3
 void DBG_DrawRotationY( const Fmatrix &m, float ang0, float ang1, float size, u32 ac, bool solid = false, u32 tessel = 7 );
 void DBG_DrawRotationZ( const Fmatrix &m, float ang0, float ang1, float size, u32 ac, bool solid = false, u32 tessel = 7 );
 void _cdecl DBG_OutText( LPCSTR s,... );
+void DBG_TextOutSet( float x, float y );
+void DBG_TextSetColor( u32 color );
+void DBG_DrawBind( CObject &O );
+void DBG_PhysBones( CObject &O );
+void DBG_DrawBones( CObject &O );
 void DBG_DrawFrameStart( );
 void PH_DBG_Render( );
 void PH_DBG_Clear( );
-LPCSTR PH_DBG_ObjectTrack( );
-void PH_DBG_SetTrackObject( LPCSTR obj );
+LPCSTR PH_DBG_ObjectTrackName( );
+////////////////////////////////////////////////
+std::string dump_string( LPCSTR name, const Fvector &v );
+std::string dump_string( LPCSTR name, const Fmatrix &form );
+void dump( LPCSTR name, const Fmatrix &form );
+void dump( LPCSTR name, const Fvector &v );
 
+/////////////////////////////////////////////////
+void DBG_PH_NetRelcase( CObject* obj );
 
 
 struct CFunctionGraph
@@ -141,7 +160,7 @@ public:
 
 	CFunctionGraph						( )																																								;
 	~CFunctionGraph						( )																																								;
-	void	Init						( type_function fun, float x0, float x1, int l, int t, int w, int h, int points_num=500, u32 color=D3DCOLOR_XRGB( 0, 255, 0 ), u32 bk_color=D3DCOLOR_XRGB( 255, 255, 255 ) )	;
+	void	Init						( type_function fun, float x0, float x1, int l, int t, int w, int h, int points_num=500, u32 color=color_xrgb( 0, 255, 0 ), u32 bk_color=color_xrgb( 255, 255, 255 ) )	;
 	void	Clear						( )																																								;
 	bool	IsActive					( )																																								;
 	void	AddMarker					( CStatGraph::EStyle Style, float pos, u32 Color )																												;

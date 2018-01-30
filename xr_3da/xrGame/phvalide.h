@@ -1,5 +1,7 @@
 #pragma	once
 
+#include "ode_include.h"
+
 IC BOOL dV_valid			(const dReal * v)
 {
 	return _valid(v[0])&&_valid(v[1])&&_valid(v[2]);
@@ -37,21 +39,16 @@ IC BOOL dBodyStateValide(const dBodyID body)
 		dV_valid(dBodyGetForce(body))
 		;
 }
+bool valid_pos( const Fvector &P );
 
 #ifdef DEBUG
-#define	VERIFY_BOUNDARIES2(pos,bounds,obj,msg)\
-{\
-	if(!valid_pos(pos,bounds))\
-{\
-	Msg(" %s	\n", msg);\
-	Msg(" pos: %f,%f,%f, seems to be invalid", pos.x,pos.y,pos.z);\
-	Msg("Level box: %f,%f,%f-%f,%f,%f,",bounds.x1,bounds.y1,bounds.z1,bounds.x2,bounds.y2,bounds.z2);\
-	Msg("Object: %s",*(obj->Name()));\
-	Msg("Visual: %s",*(obj->cNameVisual()));\
-	VERIFY(0);\
-}\
-}
+
+std::string dbg_valide_pos_string( const Fvector &pos,const Fbox &bounds, const CObject *obj, LPCSTR msg );
+std::string dbg_valide_pos_string( const Fvector &pos, const CObject *obj, LPCSTR msg );
+
+#define	VERIFY_BOUNDARIES2(pos,bounds,obj,msg) VERIFY2(  valid_pos( pos, bounds ), dbg_valide_pos_string( pos, bounds, obj, msg ) )
 #define	VERIFY_BOUNDARIES(pos,bounds,obj)	VERIFY_BOUNDARIES2(pos,bounds,obj,"	")
+
 #else
 #define	VERIFY_BOUNDARIES(pos,bounds,obj)
 #define	VERIFY_BOUNDARIES2(pos,bounds,obj,msg)

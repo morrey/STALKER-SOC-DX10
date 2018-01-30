@@ -486,6 +486,7 @@
     <ClInclude Include="action_planner_script_inline.h" />
     <ClInclude Include="action_script_base.h" />
     <ClInclude Include="action_script_base_inline.h" />
+    <ClInclude Include="ActivatingCharCollisionDelay.h" />
     <ClInclude Include="Actor.h" />
     <ClInclude Include="ActorAnimation.h" />
     <ClInclude Include="ActorCondition.h" />
@@ -890,6 +891,8 @@
     <ClInclude Include="alife_update_manager_inline.h" />
     <ClInclude Include="AmebaZone.h" />
     <ClInclude Include="animation_movement_controller.h" />
+    <ClInclude Include="animation_script_callback.h" />
+    <ClInclude Include="animation_utils.h" />
     <ClInclude Include="antirad.h" />
     <ClInclude Include="Artifact.h" />
     <ClInclude Include="associative_vector.h" />
@@ -935,6 +938,7 @@
     <ClInclude Include="character_info_defs.h" />
     <ClInclude Include="character_rank.h" />
     <ClInclude Include="character_reputation.h" />
+    <ClInclude Include="character_shell_control.h" />
     <ClInclude Include="client_spawn_manager.h" />
     <ClInclude Include="client_spawn_manager_inline.h" />
     <ClInclude Include="ClimableObject.h" />
@@ -986,6 +990,7 @@
     <ClInclude Include="data_storage_single_linked_list_inline.h" />
     <ClInclude Include="date_time.h" />
     <ClInclude Include="dCylinder\dCylinder.h" />
+    <ClInclude Include="death_anims.h" />
     <ClInclude Include="debug_renderer.h" />
     <ClInclude Include="debug_renderer_inline.h" />
     <ClInclude Include="DelayedActionFuse.h" />
@@ -1104,6 +1109,7 @@
     <ClInclude Include="Geometry.h" />
     <CustomBuild Include="graph_abstract.h" />
     <CustomBuild Include="graph_abstract_inline.h" />
+    <ClInclude Include="GeometryBits.h" />
     <ClInclude Include="graph_edge.h" />
     <ClInclude Include="graph_edge_inline.h" />
     <ClInclude Include="graph_engine.h" />
@@ -1156,11 +1162,14 @@
     <ClInclude Include="ik_limb_state.h" />
     <ClInclude Include="ik_limb_state_predict.h" />
     <ClInclude Include="ik_object_shift.h" />
+    <ClInclude Include="imotion_position.h" />
+    <ClInclude Include="imotion_velocity.h" />
     <ClInclude Include="InfoDocument.h" />
     <ClInclude Include="InfoPortion.h" />
     <ClInclude Include="InfoPortionDefs.h" />
     <ClInclude Include="ini_id_loader.h" />
     <ClInclude Include="ini_table_loader.h" />
+    <ClInclude Include="interactive_animation.h" />
     <ClInclude Include="interactive_motion.h" />
     <ClInclude Include="Inventory.h" />
     <ClInclude Include="InventoryBox.h" />
@@ -1226,6 +1235,7 @@
     <ClInclude Include="movement_manager_impl.h" />
     <ClInclude Include="movement_manager_inline.h" />
     <ClInclude Include="movement_manager_space.h" />
+    <ClInclude Include="moving_bones_snd_player.h" />
     <ClInclude Include="MPPlayersBag.h" />
     <ClInclude Include="mslotutils.h" />
     <ClInclude Include="mt_config.h" />
@@ -1375,6 +1385,7 @@
     <ClInclude Include="PhysicsShellAnimatorBoneData.h" />
     <ClInclude Include="PhysicsShellHolder.h" />
     <ClInclude Include="PhysicsSkeletonObject.h" />
+    <ClInclude Include="physics_shell_animated.h" />
     <ClInclude Include="physic_item.h" />
     <ClInclude Include="physic_item_inline.h" />
     <ClInclude Include="ph_shell_interface.h" />
@@ -1954,6 +1965,7 @@
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">pch_script.h</PrecompiledHeaderFile>
       <PrecompiledHeaderOutputFile Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)$(ProjectName)_script.pch</PrecompiledHeaderOutputFile>
     </ClCompile>
+    <ClCompile Include="ActivatingCharCollisionDelay.cpp" />
     <ClCompile Include="Actor.cpp">
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Debug_Priquel|Win32'">pch_script.h</PrecompiledHeaderFile>
       <PrecompiledHeaderOutputFile Condition="'$(Configuration)|$(Platform)'=='Debug_Priquel|Win32'">$(IntDir)$(ProjectName)_script.pch</PrecompiledHeaderOutputFile>
@@ -2746,6 +2758,8 @@
     </ClCompile>
     <ClCompile Include="AmebaZone.cpp" />
     <ClCompile Include="animation_movement_controller.cpp" />
+    <ClCompile Include="animation_script_callback.cpp" />
+    <ClCompile Include="animation_utils.cpp" />
     <ClCompile Include="antirad.cpp" />
     <ClCompile Include="artefact_script.cpp">
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Debug_Priquel|Win32'">pch_script.h</PrecompiledHeaderFile>
@@ -2821,6 +2835,7 @@
     <ClCompile Include="character_info.cpp" />
     <ClCompile Include="character_rank.cpp" />
     <ClCompile Include="character_reputation.cpp" />
+    <ClCompile Include="character_shell_control.cpp" />
     <ClCompile Include="client_spawn_manager.cpp">
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Debug_Priquel|Win32'">pch_script.h</PrecompiledHeaderFile>
       <PrecompiledHeaderOutputFile Condition="'$(Configuration)|$(Platform)'=='Debug_Priquel|Win32'">$(IntDir)$(ProjectName)_script.pch</PrecompiledHeaderOutputFile>
@@ -2947,6 +2962,8 @@
       <DisableSpecificWarnings Condition="'$(Configuration)|$(Platform)'=='Release_Priquel|Win32'">4002;4390;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <DisableSpecificWarnings Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">4002;4390;%(DisableSpecificWarnings)</DisableSpecificWarnings>
     </ClCompile>
+    <ClCompile Include="death_anims.cpp" />
+    <ClCompile Include="death_anims_predicates.cpp" />
     <ClCompile Include="debug_renderer.cpp" />
     <ClCompile Include="DelayedActionFuse.cpp" />
     <ClCompile Include="DestroyablePhysicsObject.cpp">
@@ -3378,6 +3395,7 @@
     <ClCompile Include="game_sv_teamdeathmatch.cpp" />
     <ClCompile Include="game_sv_teamdeathmatch_process_event.cpp" />
     <ClCompile Include="Geometry.cpp" />
+    <ClCompile Include="GeometryBits.cpp" />
     <ClCompile Include="GraviArtifact.cpp" />
     <ClCompile Include="GraviZone.cpp" />
     <ClCompile Include="Grenade.cpp" />
@@ -3537,6 +3555,8 @@
     <ClCompile Include="ik_foot_collider.cpp" />
     <ClCompile Include="ik_limb_state.cpp" />
     <ClCompile Include="ik_object_shift.cpp" />
+    <ClCompile Include="imotion_position.cpp" />
+    <ClCompile Include="imotion_velocity.cpp" />
     <ClCompile Include="InfoDocument.cpp" />
     <ClCompile Include="InfoPortion.cpp">
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Debug_Priquel|Win32'">pch_script.h</PrecompiledHeaderFile>
@@ -3552,6 +3572,7 @@
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">pch_script.h</PrecompiledHeaderFile>
       <PrecompiledHeaderOutputFile Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)$(ProjectName)_script.pch</PrecompiledHeaderOutputFile>
     </ClCompile>
+    <ClCompile Include="interactive_animation.cpp" />
     <ClCompile Include="interactive_motion.cpp" />
     <ClCompile Include="Inventory.cpp">
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Debug_Priquel|Win32'">pch_script.h</PrecompiledHeaderFile>
@@ -3848,6 +3869,7 @@
       <PrecompiledHeaderOutputFile Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)$(ProjectName)_script.pch</PrecompiledHeaderOutputFile>
     </ClCompile>
     <ClCompile Include="movement_manager_physic.cpp" />
+    <ClCompile Include="moving_bones_snd_player.cpp" />
     <ClCompile Include="MPPlayersBag.cpp" />
     <ClCompile Include="Needles.cpp" />
     <ClCompile Include="NoGravityZone.cpp" />
@@ -4172,6 +4194,7 @@
     </ClCompile>
     <ClCompile Include="PhysicsSkeletonObject.cpp" />
     <ClCompile Include="physics_game.cpp" />
+    <ClCompile Include="physics_shell_animated.cpp" />
     <ClCompile Include="physic_item.cpp" />
     <ClCompile Include="poses_blending.cpp" />
     <ClCompile Include="pose_extrapolation.cpp" />

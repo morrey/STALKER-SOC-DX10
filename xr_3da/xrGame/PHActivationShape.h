@@ -9,6 +9,11 @@ dBodyID					m_body																																							;
 dGeomID					m_geom																																							;
 Flags16					m_flags																																							;
 CSafeFixedRotationState m_safe_state																																					;			
+
+#ifdef		DEBUG
+virtual		CPhysicsShellHolder	*ref_object					();
+#endif
+
 public:
 enum					EType
 {

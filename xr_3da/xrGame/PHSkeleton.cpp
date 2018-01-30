@@ -50,7 +50,7 @@ void CPHSkeleton::RespawnInit()
 		K->LL_SetBoneRoot(0);
 		K->LL_SetBonesVisible(0xffffffffffffffffL);
 		K->CalculateBones_Invalidate();
-		K->CalculateBones();
+		K->CalculateBones(TRUE);
 	}
 	Init();
 	ClearUnsplited();
@@ -151,6 +151,14 @@ void CPHSkeleton::Update(u32 dt)
 		m_unsplited_shels.empty()) 
 	{
 		if (obj->Local())	obj->DestroyObject	();
+/*
+		NET_Packet			P;
+		obj->u_EventGen		(P,GE_DESTROY,obj->ID());
+#ifdef DEBUG
+		Msg					("ge_destroy: [%d] - %s",obj->ID(),*(obj->cName()));
+#endif
+		if (obj->Local())	obj->u_EventSend			(P);
+*/
 		b_removing=false;
 	}
 
@@ -272,6 +280,7 @@ void CPHSkeleton::SpawnCopy()
 		CSE_ALifePHSkeletonObject	*l_tpALifePhysicObject = smart_cast<CSE_ALifePHSkeletonObject*>(D);
 		R_ASSERT					(l_tpALifePhysicObject);
 		l_tpALifePhysicObject->_flags.set	(CSE_PHSkeleton::flSpawnCopy,1);
+		//SetNotNeedSave()
 		/////////////////////////////////////////////////////////////////////////////////////////////
 		InitServerObject			(D);
 		// Send
@@ -319,7 +328,7 @@ void CPHSkeleton::UnsplitSingle(CPHSkeleton* SO)
 	pKinematics->LL_SetBoneVisible(split_bone,FALSE,TRUE);
 
 	pKinematics->CalculateBones_Invalidate	();
-	pKinematics->CalculateBones				();
+	pKinematics->CalculateBones				(TRUE);
 
 	mask0.assign(pKinematics->LL_GetBonesVisible());//first part mask
 	VERIFY2(mask0.flags,"mask0 -Zero");
@@ -332,7 +341,7 @@ void CPHSkeleton::UnsplitSingle(CPHSkeleton* SO)
 	newKinematics->LL_SetBonesVisible	(mask1.flags);
 
 	newKinematics->CalculateBones_Invalidate	();
-	newKinematics->CalculateBones				();
+	newKinematics->CalculateBones				(TRUE);
 
 	newPhysicsShell->set_Kinematics(newKinematics);
 	VERIFY(_valid(newPhysicsShell->mXFORM));
@@ -420,7 +429,7 @@ void CPHSkeleton::InitServerObject(CSE_Abstract * D)
 	l_tpALifePhysicObject->startup_animation=m_startup_anim;
 	D->s_name			= "ph_skeleton_object";//*cNameSect()
 	D->set_name_replace	("");
-	D->s_gameid			=	u8(GameID());
+//.	D->s_gameid			=	u8(GameID());
 	D->s_RP				=	0xff;
 	D->ID				=	0xffff;
 	D->ID_Parent		=	0xffff;//u16(ID());//

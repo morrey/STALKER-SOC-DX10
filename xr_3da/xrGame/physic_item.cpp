@@ -11,6 +11,7 @@
 #include "physicsshell.h"
 #include "xrserver_objects.h"
 #include "../xrRender/RenderVisual.h"
+#include "../xrRender/KinematicsAnimated.h"
 #include "../xrRender/Kinematics.h"
 #define CHOOSE_MAX(x,inst_x,y,inst_y,z,inst_z)\
 	if(x>y)\
@@ -78,10 +79,11 @@ void CPhysicItem::OnH_B_Chield		()
 BOOL CPhysicItem::net_Spawn			(CSE_Abstract* DC)
 {
 	if (!inherited::net_Spawn(DC))
-		return				(FALSE);
-	smart_cast<IKinematics*>(Visual())->CalculateBones_Invalidate	();
-	smart_cast<IKinematics*>(Visual())->CalculateBones				();
-	CSE_Abstract			*abstract = (CSE_Abstract*)DC;
+		return (FALSE);
+	IKinematics* pK = smart_cast<IKinematics*>(Visual());
+	pK->CalculateBones_Invalidate();
+	pK->CalculateBones(TRUE);
+	CSE_Abstract *abstract = (CSE_Abstract*)DC;
 	if (0xffff == abstract->ID_Parent)
 	{
 		if(!PPhysicsShell())setup_physic_shell	();
@@ -123,7 +125,7 @@ void CPhysicItem::activate_physic_shell()
 	if(K)
 	{
 		K->CalculateBones_Invalidate();
-		K->CalculateBones();
+		K->CalculateBones(TRUE);
 	}
 	///m_pPhysicsShell->Update		();	
 }
@@ -135,7 +137,7 @@ void CPhysicItem::setup_physic_shell	()
 	if(K)
 	{
 		K->CalculateBones_Invalidate();
-		K->CalculateBones();
+		K->CalculateBones(TRUE);
 	}
 	//m_pPhysicsShell->Update		();
 }

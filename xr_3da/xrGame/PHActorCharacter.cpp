@@ -7,7 +7,7 @@
 #include "ai/stalker/ai_stalker.h"
 #include "Actor.h"
 #include "../GameMtlLib.h"
-#include "level.h"
+#include "Level.h"
 
 //const float JUMP_HIGHT=0.5;
 const float JUMP_UP_VELOCITY=6.0f;//5.6f;
@@ -23,9 +23,9 @@ CPHActorCharacter::CPHActorCharacter()
 	
 	{
 		m_restrictors.resize(3);
-		m_restrictors[0]=(xr_new<stalker_restrictor>());
-		m_restrictors[1]=xr_new<stalker_small_restrictor>();
-		m_restrictors[2]=(xr_new<medium_monster_restrictor>());
+		m_restrictors[0]=(new stalker_restrictor());
+		m_restrictors[1]= new stalker_small_restrictor();
+		m_restrictors[2]=(new medium_monster_restrictor());
 	}
 }
 
@@ -33,7 +33,7 @@ CPHActorCharacter::~CPHActorCharacter(void)
 {
 	ClearRestrictors();
 }
-
+static u16 slide_material_index = GAMEMTL_NONE_IDX;
 void CPHActorCharacter::Create(dVector3 sizes)
 {
 	if(b_exist) return;
@@ -52,6 +52,21 @@ void CPHActorCharacter::Create(dVector3 sizes)
 	{
 		SetPhysicsRefObject(m_phys_ref_object);
 	}
+	if(slide_material_index == GAMEMTL_NONE_IDX)
+	{
+		GameMtlIt mi = GMLib.GetMaterialIt("materials\\earth_slide");
+		if( mi != GMLib.LastMaterial	())
+			slide_material_index =u16( mi - GMLib.FirstMaterial() );
+		//slide_material_index = GMLib.GetMaterialIdx("earth_slide");
+	}
+}
+void	CPHActorCharacter::	ValidateWalkOn						()
+{
+	
+	if( LastMaterialIDX( ) ==  slide_material_index )
+		b_clamb_jump = false;
+	else
+		inherited::ValidateWalkOn();
 }
 void SPHCharacterRestrictor::Create(CPHCharacter* ch,dVector3 sizes)
 {
@@ -174,11 +189,18 @@ void CPHActorCharacter::SetAcceleration(Fvector accel)
 	if(!cur_a.similar(input_a,0.05f)||!fis_zero(input_mug-cur_mug,0.5f))
 						inherited::SetAcceleration(accel);
 }
-
+bool	CPHActorCharacter::	CanJump								()
+{
+	return  !b_lose_control														&& 
+			LastMaterialIDX( ) !=  slide_material_index							&& 
+			(m_ground_contact_normal[1]>0.5f
+			||
+			m_elevator_state.ClimbingState());
+}
 void CPHActorCharacter::Jump(const Fvector& accel)
 {
 	if(!b_exist) return;
-	if(!b_lose_control && (m_ground_contact_normal[1]>0.5f||m_elevator_state.ClimbingState()))
+	if(CanJump())
 	{
 		b_jump=true;
 		const dReal* vel=dBodyGetLinearVel(m_body);
@@ -279,21 +301,22 @@ void CPHActorCharacter::InitContact(dContact* c,bool &do_collide,u16 material_id
 		}
 		if(do_collide)inherited::InitContact(c,do_collide,material_idx_1,material_idx_2);
 	}
-
 }
 
 void CPHActorCharacter::ChooseRestrictionType	(CPHCharacter::ERestrictionType my_type,float my_depth,CPHCharacter *ch)
 {
 if (my_type!=rtStalker||(ch->RestrictionType()!=rtStalker&&ch->RestrictionType()!=rtStalkerSmall))return;
-float checkR=m_restrictors[rtStalkerSmall]->m_restrictor_radius*1.5f;//+m_restrictors[rtStalker]->m_restrictor_radius)/2.f;
+float checkR=m_restrictors[rtStalkerSmall]->m_restrictor_radius;//1.5f;//+m_restrictors[rtStalker]->m_restrictor_radius)/2.f;
 
 switch(ch->RestrictionType())
 {
 case rtStalkerSmall:
-	if(ch->ObjectRadius()>checkR)
+	if( ch->ObjectRadius() > checkR )
 	{
-		if(my_depth>0.05f)ch->SetNewRestrictionType(rtStalker);
-		else ch->SetRestrictionType(rtStalker);
+		//if(my_depth>0.05f)
+		ch->SetNewRestrictionType(rtStalker);
+		Enable();
+		//else ch->SetRestrictionType(rtStalker);
 #ifdef DEBUG
 		if(ph_dbg_draw_mask1.test(ph_m1_DbgActorRestriction))
 				Msg("restriction ready to change small -> large");
@@ -301,16 +324,23 @@ case rtStalkerSmall:
 	}
 	break;
 case rtStalker:
-	if(ch->ObjectRadius()<checkR)
+	if( ch->ObjectRadius() < checkR )
 	{
 #ifdef DEBUG
 		if(ph_dbg_draw_mask1.test(ph_m1_DbgActorRestriction))
 						Msg("restriction  change large ->  small");
 #endif
 		ch->SetRestrictionType(rtStalkerSmall);
+		Enable();
 	}
 	break;
 default:NODEFAULT;
 }
 
+}
+
+void		CPHActorCharacter ::update_last_material()
+{
+	if( ignore_material( *p_lastMaterialIDX ) )
+				inherited::update_last_material();
 }

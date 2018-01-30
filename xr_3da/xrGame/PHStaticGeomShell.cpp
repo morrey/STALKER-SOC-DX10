@@ -5,6 +5,8 @@
 #include "PhysicsShellHolder.h"
 #include "../xrRender/Kinematics.h"
 #include "PHCollideValidator.h"
+#include "game_object_space.h"
+
 void CPHStaticGeomShell::get_spatial_params()
 {
 	Fvector					AABB;
@@ -55,7 +57,7 @@ void P_BuildStaticGeomShell(CPHStaticGeomShell* pUnbrokenObject,CGameObject* obj
 }
 CPHStaticGeomShell* P_BuildStaticGeomShell(CGameObject* obj,ObjectContactCallbackFun* object_contact_callback,Fobb &b)
 {
-	CPHStaticGeomShell* pUnbrokenObject=xr_new<CPHStaticGeomShell>();
+	CPHStaticGeomShell* pUnbrokenObject= new CPHStaticGeomShell();
 	P_BuildStaticGeomShell(pUnbrokenObject,obj,object_contact_callback,b);
 	return pUnbrokenObject;
 }
@@ -63,20 +65,22 @@ CPHStaticGeomShell* P_BuildStaticGeomShell(CGameObject* obj,ObjectContactCallbac
 CPHStaticGeomShell* P_BuildStaticGeomShell(CGameObject* obj,ObjectContactCallbackFun* object_contact_callback)
 {
 	Fobb			b;
-	IRenderVisual* V = obj->Visual();
-	R_ASSERT2(V, "need visual to build");
+	IRenderVisual* V=obj->Visual();
+	R_ASSERT2(V,"need visual to build");
 
-	smart_cast<IKinematics*>(V)->CalculateBones(TRUE);		//. bForce - was TRUE
-	V->getVisData().box.getradius(b.m_halfsize);
+	smart_cast<IKinematics*>(V)->CalculateBones	(TRUE);		//. bForce - was TRUE
+	V->getVisData().box.getradius	(b.m_halfsize);
 
-	b.xform_set(Fidentity);
-	CPHStaticGeomShell* pUnbrokenObject = P_BuildStaticGeomShell(obj, object_contact_callback, b);
+	b.xform_set					(Fidentity);
+	CPHStaticGeomShell* pUnbrokenObject =P_BuildStaticGeomShell(obj,object_contact_callback,b);
+
 	
 	IKinematics* K=smart_cast<IKinematics*>(V); VERIFY(K);
-	K->CalculateBones();
+	K->CalculateBones(TRUE);
 	for (u16 k=0; k<K->LL_BoneCount(); k++){
-		K->LL_GetBoneInstance(k).Callback_overwrite = TRUE;
-		K->LL_GetBoneInstance(k).Callback = cb;
+		K->LL_GetBoneInstance(k).set_callback( bctPhysics,cb,K->LL_GetBoneInstance(k).callback_param(), TRUE);
+		//K->LL_GetBoneInstance(k).Callback_overwrite = TRUE;
+		//K->LL_GetBoneInstance(k).Callback = cb;
 	}
 	return pUnbrokenObject;
 }

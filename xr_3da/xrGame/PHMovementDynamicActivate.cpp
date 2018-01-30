@@ -56,7 +56,6 @@ float 	STestFootCallbackPars::callback_cfm_factor						=	world_cfm*0.00001f;
 float 	STestFootCallbackPars::callback_erp_factor						=	1.f		;
 float	STestFootCallbackPars::decrement_depth							=	0.05f	;
 float	STestFootCallbackPars::max_real_depth							=	0.2f	;
-
 template<class Pars>
 void TTestDepthCallback (bool& do_colide,bool bo1,dContact& c,SGameMtl* material_1,SGameMtl* material_2)
 {

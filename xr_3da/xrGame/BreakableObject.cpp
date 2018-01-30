@@ -1,15 +1,12 @@
 #include "stdafx.h"
-#pragma hdrstop
-
 #include "BreakableObject.h"
 #include "xrserver_objects_alife.h"
 #include "PHStaticGeomShell.h"
 #include "PhysicsShell.h"
 #include "Physics.h"
 #include "../xr_collide_form.h"
-#include "../../xrNetServer/net_utils.h"
-#include "clsid_game.h"
 #include "../xrRender/Kinematics.h"
+#include "../../xrNetServer/net_utils.h"
 
 //////////////////////////////////////////////////////////////////////
 // Construction/Destruction
@@ -46,7 +43,7 @@ BOOL CBreakableObject::net_Spawn(CSE_Abstract* DC)
 	R_ASSERT				(obj);
 	inherited::net_Spawn	(DC);
 	VERIFY(!collidable.model);
-	collidable.model = xr_new<CCF_Skeleton>(this);
+	collidable.model = new CCF_Skeleton(this);
 	// set bone id
 	R_ASSERT				(Visual()&&smart_cast<IKinematics*>(Visual()));
 //	IKinematics* K			= smart_cast<IKinematics*>(Visual());
@@ -153,6 +150,7 @@ void CBreakableObject::DestroyUnbroken()
 //}
 void CBreakableObject::CreateBroken()
 {
+	phys_shell_verify_object_model ( *this );
 	processing_activate();
 	m_Shell=P_create_splited_Shell();
 	m_Shell->preBuild_FromKinematics(smart_cast<IKinematics*>(Visual()));
@@ -178,9 +176,9 @@ void CBreakableObject::ActivateBroken()
 	IKinematics* K=smart_cast<IKinematics*>(Visual());
 	m_pPhysicsShell->set_Kinematics(K);
 	m_pPhysicsShell->RunSimulation();
-	m_pPhysicsShell->SetCallbacks(m_pPhysicsShell->GetBonesCallback());
+	m_pPhysicsShell->SetCallbacks( );
 	K->CalculateBones_Invalidate();
-	K->CalculateBones();
+	K->CalculateBones(TRUE);
 	m_pPhysicsShell->GetGlobalTransformDynamic(&XFORM());
 }
 
@@ -249,29 +247,36 @@ void CBreakableObject::ObjectContactCallback(bool&/**do_colide/**/,bool bo1,dCon
 	dxGeomUserData* usr_data_1= retrieveGeomUserData(c.geom.g1);
 	dxGeomUserData* usr_data_2=retrieveGeomUserData(c.geom.g2);
 	CBreakableObject* this_object;
+	CBreakableObject* this_object1;
+	CBreakableObject* this_object2;
 	dBodyID	body;
 	float norm_sign;
+
+	this_object1 = smart_cast<CBreakableObject*>( usr_data_1->ph_ref_object );
+	this_object2 = smart_cast<CBreakableObject*>( usr_data_2->ph_ref_object );
 	if(
 		usr_data_1&&
 		usr_data_1->ph_ref_object&&
-		usr_data_1->ph_ref_object->CLS_ID == CLSID_OBJECT_BREAKABLE
-		) {
-				body=dGeomGetBody(c.geom.g2);
-				if(!body) return;
-				this_object=static_cast<CBreakableObject*>(usr_data_1->ph_ref_object);
-				norm_sign=-1.f;
-		}
+		this_object1
+		)
+	{
+			body=dGeomGetBody(c.geom.g2);
+			if(!body) return;
+			this_object = this_object1;
+			norm_sign=-1.f;
+	}
 	else if(
 		usr_data_2&&
 		usr_data_2->ph_ref_object&&
-		usr_data_2->ph_ref_object->CLS_ID == CLSID_OBJECT_BREAKABLE
-		){
-				body=dGeomGetBody(c.geom.g1);
-				if(!body) return;
-				this_object=static_cast<CBreakableObject*>(usr_data_2->ph_ref_object);
-				norm_sign=1.f;
-		}
-		else return;
+		this_object2
+		)
+	{
+			body=dGeomGetBody(c.geom.g1);
+			if(!body) return;
+			this_object = this_object2;
+			norm_sign=1.f;
+	}
+	else return;
 
 	if(!this_object->m_pUnbrokenObject) return;
 	float c_damage=E_NlS(body,c.geom.normal,norm_sign);

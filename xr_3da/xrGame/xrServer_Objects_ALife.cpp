@@ -837,84 +837,283 @@ void CSE_ALifeLevelChanger::FillProps		(LPCSTR pref, PropItemVec& items)
 ////////////////////////////////////////////////////////////////////////////
 // CSE_ALifeObjectPhysic
 ////////////////////////////////////////////////////////////////////////////
-CSE_ALifeObjectPhysic::CSE_ALifeObjectPhysic(LPCSTR caSection) : CSE_ALifeDynamicObjectVisual(caSection),CSE_PHSkeleton(caSection)
+CSE_ALifeObjectPhysic::CSE_ALifeObjectPhysic(LPCSTR caSection) : CSE_ALifeDynamicObjectVisual(caSection), CSE_PHSkeleton(caSection)
 {
-	type 						= epotSkeleton;
-	mass 						= 10.f;
+	type = epotSkeleton;
+	mass = 10.f;
 
-	if (pSettings->section_exist(caSection) && pSettings->line_exist(caSection,"visual"))
-    	set_visual				(pSettings->r_string(caSection,"visual"));
+	if (pSettings->section_exist(caSection) && pSettings->line_exist(caSection, "visual"))
+	{
+		set_visual(pSettings->r_string(caSection, "visual"));
 
-	m_flags.set					(flUseSwitches,FALSE);
-	m_flags.set					(flSwitchOffline,FALSE);
-	m_flags.set					(flUsedAI_Locations,FALSE);
+		if (pSettings->line_exist(caSection, "startup_animation"))
+			startup_animation = pSettings->r_string(caSection, "startup_animation");
+	}
+
+	if (pSettings->line_exist(caSection, "fixed_bones"))
+		fixed_bones = pSettings->r_string(caSection, "fixed_bones");
+
+	m_flags.set(flUseSwitches, FALSE);
+	m_flags.set(flSwitchOffline, FALSE);
+	m_flags.set(flUsedAI_Locations, FALSE);
+
+#ifdef XRGAME_EXPORTS
+	m_freeze_time = Device.dwTimeGlobal;
+#	ifdef DEBUG
+	m_last_update_time = Device.dwTimeGlobal;
+#	endif
+#else
+	m_freeze_time = 0;
+#endif
+	m_relevent_random.seed(u32(CPU::GetCLK() & u32(-1)));
 }
 
-CSE_ALifeObjectPhysic::~CSE_ALifeObjectPhysic		() 
+CSE_ALifeObjectPhysic::~CSE_ALifeObjectPhysic()
 {
 }
 
-void CSE_ALifeObjectPhysic::STATE_Read		(NET_Packet	&tNetPacket, u16 size) 
+void CSE_ALifeObjectPhysic::STATE_Read(NET_Packet	&tNetPacket, u16 size)
 {
 	if (m_wVersion >= 14)
 		if (m_wVersion >= 16) {
-			inherited1::STATE_Read(tNetPacket,size);
+			inherited1::STATE_Read(tNetPacket, size);
 			if (m_wVersion < 32)
-				visual_read		(tNetPacket,m_wVersion);
+				visual_read(tNetPacket, m_wVersion);
 		}
 		else {
-			CSE_ALifeObject::STATE_Read(tNetPacket,size);
-			visual_read			(tNetPacket,m_wVersion);
+			CSE_ALifeObject::STATE_Read(tNetPacket, size);
+			visual_read(tNetPacket, m_wVersion);
 		}
 
-	if (m_wVersion>=64) inherited2::STATE_Read(tNetPacket,size);
-		
-	tNetPacket.r_u32			(type);
-	tNetPacket.r_float			(mass);
-    
-	if (m_wVersion > 9)
-		tNetPacket.r_stringZ	(fixed_bones);
+		if (m_wVersion >= 64) inherited2::STATE_Read(tNetPacket, size);
 
-	if (m_wVersion<65&&m_wVersion > 28)
-		tNetPacket.r_stringZ	(startup_animation);
+		tNetPacket.r_u32(type);
+		tNetPacket.r_float(mass);
 
-	if(m_wVersion<64)
+		if (m_wVersion > 9)
+			tNetPacket.r_stringZ(fixed_bones);
+
+		if (m_wVersion<65 && m_wVersion > 28)
+			tNetPacket.r_stringZ(startup_animation);
+
+		if (m_wVersion<64)
 		{
-		if	(m_wVersion > 39)		// > 39 		
-			tNetPacket.r_u8			(_flags.flags);
+			if (m_wVersion > 39)		// > 39 		
+				tNetPacket.r_u8(_flags.flags);
 
-		if (m_wVersion>56)
-			tNetPacket.r_u16		(source_id);
+			if (m_wVersion>56)
+				tNetPacket.r_u16(source_id);
 
-		if (m_wVersion>60	&&	_flags.test(flSavedData)) {
-			data_load(tNetPacket);
+			if (m_wVersion>60 && _flags.test(flSavedData)) {
+				data_load(tNetPacket);
+			}
 		}
+		set_editor_flag(flVisualAnimationChange);
+}
+
+void CSE_ALifeObjectPhysic::STATE_Write(NET_Packet	&tNetPacket)
+{
+	inherited1::STATE_Write(tNetPacket);
+	inherited2::STATE_Write(tNetPacket);
+	tNetPacket.w_u32(type);
+	tNetPacket.w_float(mass);
+	tNetPacket.w_stringZ(fixed_bones);
+
+}
+
+static inline bool check(const u8 &mask, const u8 &test)
+{
+	return							(!!(mask & test));
+}
+
+const	u32		CSE_ALifeObjectPhysic::m_freeze_delta_time = 5000;
+const	u32		CSE_ALifeObjectPhysic::random_limit = 40;
+
+#ifdef DEBUG
+const	u32		CSE_ALifeObjectPhysic::m_update_delta_time = 0;
+#endif // #ifdef DEBUG
+
+//if TRUE, then object sends update packet
+BOOL CSE_ALifeObjectPhysic::Net_Relevant()
+{
+	if (!freezed)
+	{
+#ifdef XRGAME_EXPORTS
+#ifdef DEBUG	//this block of code is only for test
+		if (Device.dwTimeGlobal < (m_last_update_time + m_update_delta_time))
+			return FALSE;
+#endif
+#endif
+		return		TRUE;
 	}
-	set_editor_flag				(flVisualAnimationChange);
+
+#ifdef XRGAME_EXPORTS
+	if (Device.dwTimeGlobal >= (m_freeze_time + m_freeze_delta_time))
+		return		FALSE;
+#endif
+	if (!prev_freezed)
+	{
+		prev_freezed = true;	//i.e. freezed
+		return		TRUE;
+	}
+
+	if (m_relevent_random.randI(random_limit))
+		return		FALSE;
+
+	return			TRUE;
 }
 
-void CSE_ALifeObjectPhysic::STATE_Write		(NET_Packet	&tNetPacket)
+void CSE_ALifeObjectPhysic::UPDATE_Read(NET_Packet	&tNetPacket)
 {
-	inherited1::STATE_Write		(tNetPacket);
-	inherited2::STATE_Write		(tNetPacket);
-	tNetPacket.w_u32			(type);
-	tNetPacket.w_float			(mass);
-	tNetPacket.w_stringZ			(fixed_bones);
+	inherited1::UPDATE_Read(tNetPacket);
+	inherited2::UPDATE_Read(tNetPacket);
 
+	if (tNetPacket.r_eof())		//backward compatibility
+		return;
+
+	//////////////////////////////////////////////////////////////////////////
+	tNetPacket.r_u8(m_u8NumItems);
+	if (!m_u8NumItems) {
+		return;
+	}
+
+	mask_num_items					num_items;
+	num_items.common = m_u8NumItems;
+	m_u8NumItems = num_items.num_items;
+
+	R_ASSERT2(
+		m_u8NumItems < (u8(1) << 5),
+		make_string("%d", m_u8NumItems)
+	);
+
+	/*if (check(num_items.mask,animated))
+	{
+	tNetPacket.r_float(m_blend_timeCurrent);
+	anim_use=true;
+	}
+	else
+	{
+	anim_use=false;
+	}*/
+
+	{
+		tNetPacket.r_vec3(State.force);
+		tNetPacket.r_vec3(State.torque);
+
+		tNetPacket.r_vec3(State.position);
+
+		tNetPacket.r_float(State.quaternion.x);
+		tNetPacket.r_float(State.quaternion.y);
+		tNetPacket.r_float(State.quaternion.z);
+		tNetPacket.r_float(State.quaternion.w);
+
+		State.enabled = check(num_items.mask, inventory_item_state_enabled);
+
+		if (!check(num_items.mask, inventory_item_angular_null)) {
+			tNetPacket.r_float(State.angular_vel.x);
+			tNetPacket.r_float(State.angular_vel.y);
+			tNetPacket.r_float(State.angular_vel.z);
+		}
+		else
+			State.angular_vel.set(0.f, 0.f, 0.f);
+
+		if (!check(num_items.mask, inventory_item_linear_null)) {
+			tNetPacket.r_float(State.linear_vel.x);
+			tNetPacket.r_float(State.linear_vel.y);
+			tNetPacket.r_float(State.linear_vel.z);
+		}
+		else
+			State.linear_vel.set(0.f, 0.f, 0.f);
+
+		/*if (check(num_items.mask,animated))
+		{
+		anim_use=true;
+		}*/
+	}
+	prev_freezed = freezed;
+	if (tNetPacket.r_eof())		// in case spawn + update 
+	{
+		freezed = false;
+		return;
+	}
+	if (tNetPacket.r_u8())
+	{
+		freezed = false;
+	}
+	else {
+		if (!freezed)
+#ifdef XRGAME_EXPORTS
+			m_freeze_time = Device.dwTimeGlobal;
+#else
+			m_freeze_time = 0;
+#endif
+		freezed = true;
+	}
 }
 
-
-
-void CSE_ALifeObjectPhysic::UPDATE_Read		(NET_Packet	&tNetPacket)
+void CSE_ALifeObjectPhysic::UPDATE_Write(NET_Packet	&tNetPacket)
 {
-	inherited1::UPDATE_Read		(tNetPacket);
-	inherited2::UPDATE_Read		(tNetPacket);
-}
+	inherited1::UPDATE_Write(tNetPacket);
+	inherited2::UPDATE_Write(tNetPacket);
+	//////////////////////////////////////////////////////////////////////////
+	if (!m_u8NumItems) {
+		tNetPacket.w_u8(0);
+		return;
+	}
 
-void CSE_ALifeObjectPhysic::UPDATE_Write	(NET_Packet	&tNetPacket)
-{
-	inherited1::UPDATE_Write		(tNetPacket);
-	inherited2::UPDATE_Write		(tNetPacket);
+	mask_num_items					num_items;
+	num_items.mask = 0;
+	num_items.num_items = m_u8NumItems;
+
+	R_ASSERT2(
+		num_items.num_items < (u8(1) << 5),
+		make_string("%d", num_items.num_items)
+	);
+
+	if (State.enabled)									num_items.mask |= inventory_item_state_enabled;
+	if (fis_zero(State.angular_vel.square_magnitude()))	num_items.mask |= inventory_item_angular_null;
+	if (fis_zero(State.linear_vel.square_magnitude()))	num_items.mask |= inventory_item_linear_null;
+	//if (anim_use)										num_items.mask |= animated;
+
+	tNetPacket.w_u8(num_items.common);
+
+	/*if(check(num_items.mask,animated))
+	{
+	tNetPacket.w_float				(m_blend_timeCurrent);
+	}*/
+
+	{
+		tNetPacket.w_vec3(State.force);
+		tNetPacket.w_vec3(State.torque);
+
+		tNetPacket.w_vec3(State.position);
+
+		tNetPacket.w_float(State.quaternion.x);
+		tNetPacket.w_float(State.quaternion.y);
+		tNetPacket.w_float(State.quaternion.z);
+		tNetPacket.w_float(State.quaternion.w);
+
+		if (!check(num_items.mask, inventory_item_angular_null)) {
+			tNetPacket.w_float(State.angular_vel.x);
+			tNetPacket.w_float(State.angular_vel.y);
+			tNetPacket.w_float(State.angular_vel.z);
+		}
+
+		if (!check(num_items.mask, inventory_item_linear_null)) {
+			tNetPacket.w_float(State.linear_vel.x);
+			tNetPacket.w_float(State.linear_vel.y);
+			tNetPacket.w_float(State.linear_vel.z);
+		}
+
+	}
+	//.	Msg("* Sync PH [%d].", ID);
+	tNetPacket.w_u8(1);	//not freezed - doesn't mean anything..
+
+#ifdef XRGAME_EXPORTS
+#ifdef DEBUG
+	m_last_update_time = Device.dwTimeGlobal;
+#endif
+#endif
 }
 
 
@@ -927,173 +1126,189 @@ void CSE_ALifeObjectPhysic::load(NET_Packet &tNetPacket)
 }
 
 
-xr_token po_types[]={
-	{ "Box",			epotBox			},
-	{ "Fixed chain",	epotFixedChain	},
-	{ "Free chain",		epotFreeChain	},
-	{ "Skeleton",		epotSkeleton	},
-	{ 0,				0				}
+xr_token po_types[] = {
+	{ "Box",			epotBox },
+	{ "Fixed chain",	epotFixedChain },
+	{ "Free chain",		epotFreeChain },
+	{ "Skeleton",		epotSkeleton },
+	{ 0,				0 }
 };
 
-void CSE_ALifeObjectPhysic::FillProps		(LPCSTR pref, PropItemVec& values) 
+void CSE_ALifeObjectPhysic::FillProps(LPCSTR pref, PropItemVec& values)
 {
-	inherited1::FillProps		(pref,	 values);
-	inherited2::FillProps		(pref,	 values);
+	inherited1::FillProps(pref, values);
+	inherited2::FillProps(pref, values);
 
-	PHelper().CreateToken32		(values, PrepareKey(pref,*s_name,"Type"), &type,	po_types);
-	PHelper().CreateFloat		(values, PrepareKey(pref,*s_name,"Mass"), &mass, 0.1f, 10000.f);
-    PHelper().CreateFlag8		(values, PrepareKey(pref,*s_name,"Active"), &_flags, flActive);
+	PHelper().CreateToken32(values, PrepareKey(pref, *s_name, "Type"), &type, po_types);
+	PHelper().CreateFloat(values, PrepareKey(pref, *s_name, "Mass"), &mass, 0.1f, 10000.f);
+	PHelper().CreateFlag8(values, PrepareKey(pref, *s_name, "Active"), &_flags, flActive);
 
-    // motions & bones
-	PHelper().CreateChoose		(values, 	PrepareKey(pref,*s_name,"Model\\Fixed bones"),	&fixed_bones,		smSkeletonBones,0,(void*)visual()->get_visual(),8);
+	// motions & bones
+	PHelper().CreateChoose(values, PrepareKey(pref, *s_name, "Model\\Fixed bones"), &fixed_bones, smSkeletonBones, 0, (void*)visual()->get_visual(), 8);
 }
 
-bool CSE_ALifeObjectPhysic::used_ai_locations	() const
+bool CSE_ALifeObjectPhysic::used_ai_locations() const
 {
 	return						(false);
 }
 
-bool CSE_ALifeObjectPhysic::can_save			() const
+bool CSE_ALifeObjectPhysic::can_save() const
 {
-		return						CSE_PHSkeleton::need_save();
+	return						CSE_PHSkeleton::need_save();
 }
 
 ////////////////////////////////////////////////////////////////////////////
 // CSE_ALifeObjectHangingLamp
 ////////////////////////////////////////////////////////////////////////////
-CSE_ALifeObjectHangingLamp::CSE_ALifeObjectHangingLamp(LPCSTR caSection) : CSE_ALifeDynamicObjectVisual(caSection),CSE_PHSkeleton(caSection)
+CSE_ALifeObjectHangingLamp::CSE_ALifeObjectHangingLamp(LPCSTR caSection) : CSE_ALifeDynamicObjectVisual(caSection), CSE_PHSkeleton(caSection)
 {
-	flags.assign				(flTypeSpot|flR1|flR2);
+	flags.assign(flTypeSpot | flR1 | flR2);
 
-	range						= 10.f;
-	color						= 0xffffffff;
-    brightness					= 1.f;
-	m_health					= 100.f;
-	m_flags.set					(flUseSwitches,FALSE);
-	m_flags.set					(flSwitchOffline,FALSE);
+	range = 10.f;
+	color = 0xffffffff;
+	brightness = 1.f;
+	m_health = 100.f;
+	m_flags.set(flUseSwitches, FALSE);
+	m_flags.set(flSwitchOffline, FALSE);
 
-	m_virtual_size				= 0.1f;
-	m_ambient_radius			= 10.f;
-    m_ambient_power				= 0.1f;
-    spot_cone_angle				= deg2rad(120.f);
-    glow_radius					= 0.7f;
+	m_virtual_size = 0.1f;
+	m_ambient_radius = 10.f;
+	m_ambient_power = 0.1f;
+	spot_cone_angle = deg2rad(120.f);
+	glow_radius = 0.7f;
+	m_volumetric_quality = 1.0f;
+	m_volumetric_intensity = 1.0f;
+	m_volumetric_distance = 1.0f;
 }
 
 CSE_ALifeObjectHangingLamp::~CSE_ALifeObjectHangingLamp()
 {
 }
 
-void CSE_ALifeObjectHangingLamp::STATE_Read	(NET_Packet	&tNetPacket, u16 size)
+void CSE_ALifeObjectHangingLamp::STATE_Read(NET_Packet	&tNetPacket, u16 size)
 {
 	if (m_wVersion > 20)
-		inherited1::STATE_Read	(tNetPacket,size);
-	if (m_wVersion>=69)
-		inherited2::STATE_Read	(tNetPacket,size);
+		inherited1::STATE_Read(tNetPacket, size);
+	if (m_wVersion >= 69)
+		inherited2::STATE_Read(tNetPacket, size);
 	if (m_wVersion < 32)
-		visual_read				(tNetPacket,m_wVersion);
+		visual_read(tNetPacket, m_wVersion);
 
-	if (m_wVersion < 49){
+	if (m_wVersion < 49) {
 		shared_str s_tmp;
 		float	f_tmp;
 		// model
-		tNetPacket.r_u32			(color);
-		tNetPacket.r_stringZ		(color_animator);
-		tNetPacket.r_stringZ		(s_tmp);
-		tNetPacket.r_stringZ		(s_tmp);
-		tNetPacket.r_float			(range);
-		tNetPacket.r_angle8			(f_tmp);
+		tNetPacket.r_u32(color);
+		tNetPacket.r_stringZ(color_animator);
+		tNetPacket.r_stringZ(s_tmp);
+		tNetPacket.r_stringZ(s_tmp);
+		tNetPacket.r_float(range);
+		tNetPacket.r_angle8(f_tmp);
 		if (m_wVersion>10)
-			tNetPacket.r_float		(brightness);
+			tNetPacket.r_float(brightness);
 		if (m_wVersion>11)
-			tNetPacket.r_u16		(flags.flags);
+			tNetPacket.r_u16(flags.flags);
 		if (m_wVersion>12)
-			tNetPacket.r_float		(f_tmp);
+			tNetPacket.r_float(f_tmp);
 		if (m_wVersion>17)
-			tNetPacket.r_stringZ	(startup_animation);
+			tNetPacket.r_stringZ(startup_animation);
 
-		set_editor_flag				(flVisualAnimationChange);
+		set_editor_flag(flVisualAnimationChange);
 
 		if (m_wVersion > 42) {
-			tNetPacket.r_stringZ	(s_tmp);
-			tNetPacket.r_float		(f_tmp);
+			tNetPacket.r_stringZ(s_tmp);
+			tNetPacket.r_float(f_tmp);
 		}
 
-		if (m_wVersion > 43){
-			tNetPacket.r_stringZ	(fixed_bones);
+		if (m_wVersion > 43) {
+			tNetPacket.r_stringZ(fixed_bones);
 		}
 
-		if (m_wVersion > 44){
-			tNetPacket.r_float		(m_health);
+		if (m_wVersion > 44) {
+			tNetPacket.r_float(m_health);
 		}
-	}else{
+	}
+	else {
 		// model
-		tNetPacket.r_u32			(color);
-		tNetPacket.r_float			(brightness);
-		tNetPacket.r_stringZ		(color_animator);
-		tNetPacket.r_float			(range);
-    	tNetPacket.r_u16			(flags.flags);
-		tNetPacket.r_stringZ		(startup_animation);
-		set_editor_flag				(flVisualAnimationChange);
-		tNetPacket.r_stringZ		(fixed_bones);
-		tNetPacket.r_float			(m_health);
+		tNetPacket.r_u32(color);
+		tNetPacket.r_float(brightness);
+		tNetPacket.r_stringZ(color_animator);
+		tNetPacket.r_float(range);
+		tNetPacket.r_u16(flags.flags);
+		tNetPacket.r_stringZ(startup_animation);
+		set_editor_flag(flVisualAnimationChange);
+		tNetPacket.r_stringZ(fixed_bones);
+		tNetPacket.r_float(m_health);
 	}
-	if (m_wVersion > 55){
-		tNetPacket.r_float			(m_virtual_size);
-	    tNetPacket.r_float			(m_ambient_radius);
-    	tNetPacket.r_float			(m_ambient_power);
-	    tNetPacket.r_stringZ		(m_ambient_texture);
-        tNetPacket.r_stringZ		(light_texture);
-        tNetPacket.r_stringZ		(light_main_bone);
-        tNetPacket.r_float			(spot_cone_angle);
-        tNetPacket.r_stringZ		(glow_texture);
-        tNetPacket.r_float			(glow_radius);
+	if (m_wVersion > 55) {
+		tNetPacket.r_float(m_virtual_size);
+		tNetPacket.r_float(m_ambient_radius);
+		tNetPacket.r_float(m_ambient_power);
+		tNetPacket.r_stringZ(m_ambient_texture);
+		tNetPacket.r_stringZ(light_texture);
+		tNetPacket.r_stringZ(light_main_bone);
+		tNetPacket.r_float(spot_cone_angle);
+		tNetPacket.r_stringZ(glow_texture);
+		tNetPacket.r_float(glow_radius);
 	}
-	if (m_wVersion > 96){
-		tNetPacket.r_stringZ		(light_ambient_bone);
-	}else{
-		light_ambient_bone			= light_main_bone;
+	if (m_wVersion > 96) {
+		tNetPacket.r_stringZ(light_ambient_bone);
+	}
+	else {
+		light_ambient_bone = light_main_bone;
+	}
+
+	if (m_wVersion>118)
+	{
+		tNetPacket.r_float(m_volumetric_quality);
+		tNetPacket.r_float(m_volumetric_intensity);
+		tNetPacket.r_float(m_volumetric_distance);
 	}
 }
 
 void CSE_ALifeObjectHangingLamp::STATE_Write(NET_Packet	&tNetPacket)
 {
-	inherited1::STATE_Write		(tNetPacket);
-	inherited2::STATE_Write		(tNetPacket);
+	inherited1::STATE_Write(tNetPacket);
+	inherited2::STATE_Write(tNetPacket);
 
 	// model
-	tNetPacket.w_u32			(color);
-	tNetPacket.w_float			(brightness);
-	tNetPacket.w_stringZ		(color_animator);
-	tNetPacket.w_float			(range);
-   	tNetPacket.w_u16			(flags.flags);
-	tNetPacket.w_stringZ		(startup_animation);
-    tNetPacket.w_stringZ		(fixed_bones);
-	tNetPacket.w_float			(m_health);
-	tNetPacket.w_float			(m_virtual_size);
-    tNetPacket.w_float			(m_ambient_radius);
-    tNetPacket.w_float			(m_ambient_power);
-    tNetPacket.w_stringZ		(m_ambient_texture);
+	tNetPacket.w_u32(color);
+	tNetPacket.w_float(brightness);
+	tNetPacket.w_stringZ(color_animator);
+	tNetPacket.w_float(range);
+	tNetPacket.w_u16(flags.flags);
+	tNetPacket.w_stringZ(startup_animation);
+	tNetPacket.w_stringZ(fixed_bones);
+	tNetPacket.w_float(m_health);
+	tNetPacket.w_float(m_virtual_size);
+	tNetPacket.w_float(m_ambient_radius);
+	tNetPacket.w_float(m_ambient_power);
+	tNetPacket.w_stringZ(m_ambient_texture);
 
-    tNetPacket.w_stringZ		(light_texture);
-    tNetPacket.w_stringZ		(light_main_bone);
-    tNetPacket.w_float			(spot_cone_angle);
-    tNetPacket.w_stringZ		(glow_texture);
-    tNetPacket.w_float			(glow_radius);
-    
-	tNetPacket.w_stringZ		(light_ambient_bone);
+	tNetPacket.w_stringZ(light_texture);
+	tNetPacket.w_stringZ(light_main_bone);
+	tNetPacket.w_float(spot_cone_angle);
+	tNetPacket.w_stringZ(glow_texture);
+	tNetPacket.w_float(glow_radius);
+
+	tNetPacket.w_stringZ(light_ambient_bone);
+
+	tNetPacket.w_float(m_volumetric_quality);
+	tNetPacket.w_float(m_volumetric_intensity);
+	tNetPacket.w_float(m_volumetric_distance);
 }
 
 
 void CSE_ALifeObjectHangingLamp::UPDATE_Read(NET_Packet	&tNetPacket)
 {
-	inherited1::UPDATE_Read		(tNetPacket);
-	inherited2::UPDATE_Read		(tNetPacket);
+	inherited1::UPDATE_Read(tNetPacket);
+	inherited2::UPDATE_Read(tNetPacket);
 }
 
 void CSE_ALifeObjectHangingLamp::UPDATE_Write(NET_Packet	&tNetPacket)
 {
-	inherited1::UPDATE_Write		(tNetPacket);
-	inherited2::UPDATE_Write		(tNetPacket);
+	inherited1::UPDATE_Write(tNetPacket);
+	inherited2::UPDATE_Write(tNetPacket);
 
 }
 
@@ -1105,10 +1320,10 @@ void CSE_ALifeObjectHangingLamp::load(NET_Packet &tNetPacket)
 
 void CSE_ALifeObjectHangingLamp::OnChangeFlag(PropValue* sender)
 {
-	set_editor_flag				(flUpdateProperties);
+	set_editor_flag(flUpdateProperties);
 }
 
-void CSE_ALifeObjectHangingLamp::FillProps	(LPCSTR pref, PropItemVec& values)
+void CSE_ALifeObjectHangingLamp::FillProps(LPCSTR pref, PropItemVec& values)
 {
 	inherited1::FillProps(pref, values);
 	inherited2::FillProps(pref, values);
@@ -1162,7 +1377,7 @@ void CSE_ALifeObjectHangingLamp::FillProps	(LPCSTR pref, PropItemVec& values)
 }
 
 #define VIS_RADIUS 		0.25f
-void CSE_ALifeObjectHangingLamp::on_render(CDUInterface* du, ISE_AbstractLEOwner* owner, bool bSelected, const Fmatrix& parent,int priority, bool strictB2F)
+void CSE_ALifeObjectHangingLamp::on_render(CDUInterface* du, ISE_AbstractLEOwner* owner, bool bSelected, const Fmatrix& parent, int priority, bool strictB2F)
 {
 	inherited1::on_render(du, owner, bSelected, parent, priority, strictB2F);
 	if ((1 == priority) && (false == strictB2F)) {
@@ -1190,28 +1405,28 @@ void CSE_ALifeObjectHangingLamp::on_render(CDUInterface* du, ISE_AbstractLEOwner
 	}
 }
 
-bool CSE_ALifeObjectHangingLamp::used_ai_locations	() const
+bool CSE_ALifeObjectHangingLamp::used_ai_locations() const
 {
 	return						(false);
 }
 
-bool CSE_ALifeObjectHangingLamp::validate			()
+bool CSE_ALifeObjectHangingLamp::validate()
 {
 	if (flags.test(flR1) || flags.test(flR2))
 		return					(true);
 
-	Msg							("! Render type is not set properly!");
+	Msg("! Render type is not set properly!");
 	return						(false);
 }
 
 bool CSE_ALifeObjectHangingLamp::match_configuration() const
 {
-	R_ASSERT3(flags.test(flR1) || flags.test(flR2),"no renderer type set for hanging-lamp ",name_replace());
+	R_ASSERT3(flags.test(flR1) || flags.test(flR2), "no renderer type set for hanging-lamp ", name_replace());
 #ifdef XRGAME_EXPORTS
 	return						(
 		(flags.test(flR1) && (::Render->get_generation() == IRender_interface::GENERATION_R1)) ||
 		(flags.test(flR2) && (::Render->get_generation() == IRender_interface::GENERATION_R2))
-	);
+		);
 #else
 	return						(true);
 #endif
@@ -1223,37 +1438,37 @@ bool CSE_ALifeObjectHangingLamp::match_configuration() const
 
 CSE_ALifeObjectProjector::CSE_ALifeObjectProjector(LPCSTR caSection) : CSE_ALifeDynamicObjectVisual(caSection)
 {
-	m_flags.set					(flUseSwitches,FALSE);
-	m_flags.set					(flSwitchOffline,FALSE);
+	m_flags.set(flUseSwitches, FALSE);
+	m_flags.set(flSwitchOffline, FALSE);
 }
 
 CSE_ALifeObjectProjector::~CSE_ALifeObjectProjector()
 {
 }
 
-void CSE_ALifeObjectProjector::STATE_Read	(NET_Packet	&tNetPacket, u16 size)
+void CSE_ALifeObjectProjector::STATE_Read(NET_Packet	&tNetPacket, u16 size)
 {
-	inherited::STATE_Read	(tNetPacket,size);
+	inherited::STATE_Read(tNetPacket, size);
 }
 
 void CSE_ALifeObjectProjector::STATE_Write(NET_Packet	&tNetPacket)
 {
-	inherited::STATE_Write		(tNetPacket);
+	inherited::STATE_Write(tNetPacket);
 }
 
 void CSE_ALifeObjectProjector::UPDATE_Read(NET_Packet	&tNetPacket)
 {
-	inherited::UPDATE_Read		(tNetPacket);
+	inherited::UPDATE_Read(tNetPacket);
 }
 
 void CSE_ALifeObjectProjector::UPDATE_Write(NET_Packet	&tNetPacket)
 {
-	inherited::UPDATE_Write		(tNetPacket);
+	inherited::UPDATE_Write(tNetPacket);
 }
 
-void CSE_ALifeObjectProjector::FillProps			(LPCSTR pref, PropItemVec& values)
+void CSE_ALifeObjectProjector::FillProps(LPCSTR pref, PropItemVec& values)
 {
-	inherited::FillProps			(pref,	 values);
+	inherited::FillProps(pref, values);
 }
 
 bool CSE_ALifeObjectProjector::used_ai_locations() const

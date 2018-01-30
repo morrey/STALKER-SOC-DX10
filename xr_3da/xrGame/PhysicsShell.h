@@ -19,6 +19,7 @@ class CPhysicsShellHolder;
 class CGameObject;
 class NET_Packet;
 struct SBoneShape;
+struct NearestToPointCallback;
 class  CPHShellSplitterHolder;
 class IKinematics;
 typedef u32	CLClassBits;
@@ -34,9 +35,13 @@ struct physicsBone
 		element=NULL;
 	}
 };
-DEFINE_MAP	(u16,	physicsBone,	BONE_P_MAP,	BONE_P_PAIR_IT);
+using BONE_P_MAP = xr_map<u16, physicsBone>;
+using BONE_P_PAIR_IT = BONE_P_MAP::iterator;
 typedef const  BONE_P_MAP :: iterator			BONE_P_PAIR_CIT;
 // ABSTRACT:
+class	CPhysicsBase	;
+void	get_box( const CPhysicsBase*	shell, const	Fmatrix& form,	Fvector&	sz, Fvector&	c );
+
 class	CPhysicsBase
 {
 public:
@@ -44,18 +49,20 @@ public:
 public:
 	virtual		void			Activate								(const Fmatrix& m0, float dt01, const Fmatrix& m2,bool disable=false)													= 0;
 	virtual		void			Activate								(const Fmatrix &transform,const Fvector& lin_vel,const Fvector& ang_vel,bool disable=false)								= 0;
-	virtual		void			Activate								(bool disable=false)																									= 0;
+	virtual		void			Activate								(bool disable=false, bool not_set_bone_callbacks = false)																= 0;
 	virtual		void			Activate								(const Fmatrix& form,bool disable=false)																				= 0;
+	virtual	const	Fmatrix		&XFORM									()const																													{ return mXFORM; }
+	virtual		void			get_xform								( Fmatrix& form ) const	{ form.set( XFORM() ); }
 	virtual		void			InterpolateGlobalTransform				(Fmatrix* m)																											= 0;
-	virtual		void			GetGlobalTransformDynamic				(Fmatrix* m)																											= 0;
+//	virtual		void			GetGlobalTransformDynamic				(Fmatrix* m) const																										= 0;
 	virtual		void			InterpolateGlobalPosition				(Fvector* v)																											= 0;
 	virtual		void			net_Import								(NET_Packet& P)																											= 0;
 	virtual		void			net_Export								(NET_Packet& P)																											= 0;
 	virtual		void			GetGlobalPositionDynamic				(Fvector* v)																											= 0;
 	virtual		bool			isBreakable								()																														= 0;
-	virtual		bool			isEnabled								()																														= 0;
-	virtual		bool			isActive								()																														= 0;
-	virtual		bool			isFullActive							()																														= 0;
+	virtual		bool			isEnabled								() const																												= 0;
+	virtual		bool			isActive								() const																												= 0;
+	virtual		bool			isFullActive							() const																														= 0;
 	virtual		void			Deactivate								()																														= 0;
 	virtual		void			Enable									()																														= 0;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -64,7 +71,8 @@ public:
 	virtual		float			getMass									()																														= 0;
 	virtual		float			getDensity								()																														= 0;
 	virtual		float			getVolume								()																														= 0;
-	virtual		void			get_Extensions							(const Fvector& axis,float center_prg,float& lo_ext, float& hi_ext)														= 0;
+	virtual		void			get_Extensions							( const Fvector& axis, float center_prg, float& lo_ext, float& hi_ext )	const											= 0;
+	virtual		void			get_Box									( Fvector&	sz, Fvector&	c )const																					{ get_box( this, mXFORM, sz, c ); }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	virtual		void			applyForce								(const Fvector& dir, float val)																							= 0;
 	virtual		void			applyForce								(float x,float y,float z)																								= 0;
@@ -78,13 +86,14 @@ public:
 	virtual		void			set_DynamicScales						(float l_scale=default_l_scale,float w_scale=default_w_scale)															= 0;
 	virtual		void			set_ContactCallback						(ContactCallbackFun* callback)																							= 0;
 	virtual		void			set_ObjectContactCallback				(ObjectContactCallbackFun* callback)																					= 0;
+	virtual		void			SetAnimated								( bool v )																												= 0;
 	virtual		void			add_ObjectContactCallback				(ObjectContactCallbackFun* callback)																					= 0;
 	virtual		void			remove_ObjectContactCallback			(ObjectContactCallbackFun* callback)																					= 0;
 	virtual		void			set_CallbackData						(void * cd)																												= 0;
 	virtual		void			*get_CallbackData						()																														= 0;
 	virtual		void			set_PhysicsRefObject					(CPhysicsShellHolder* ref_object)																						= 0;
-	virtual		void			get_LinearVel							(Fvector& velocity)																										= 0;
-	virtual		void			get_AngularVel							(Fvector& velocity)																										= 0;
+//	virtual		void			get_LinearVel							(Fvector& velocity) const																								= 0;
+//	virtual		void			get_AngularVel							(Fvector& velocity)	const																								= 0;
 	virtual		void			set_LinearVel							(const Fvector& velocity)																								= 0;
 	virtual		void			set_AngularVel							(const Fvector& velocity)																								= 0;
 	virtual		void			TransformPosition						(const Fmatrix &form)																									= 0;
@@ -95,12 +104,19 @@ public:
 	virtual		void			SetMaterial								(LPCSTR m)																												= 0;
 	virtual		void			set_DisableParams						(const SAllDDOParams& params)																							= 0;
 	virtual		void			SetTransform							(const Fmatrix& m0)																										= 0;
-	virtual						~CPhysicsBase							()																																		{};
+#ifdef		DEBUG
+	virtual		void			dbg_draw_velocity						( float scale, u32 color )																								= 0;
+	virtual		void			dbg_draw_force							( float scale, u32 color )																								= 0;
+	virtual		void			dbg_draw_geometry						( float scale, u32 color, Flags32 flags = Flags32().assign( 0 ) ) const													= 0;
+#endif
+	virtual						~CPhysicsBase							()																														{};
 };
 
 // ABSTRACT:
 // Element is fully Rigid and consists of one or more forms, such as sphere, box, cylinder, etc.
-class	CPhysicsElement		: public CPhysicsBase
+class	CPhysicsElement		: 
+	public CPhysicsBase,
+	public IPhysicsElement
 {
 
 public:
@@ -114,6 +130,11 @@ public:
 	virtual		void							add_Shape								(const SBoneShape& shape)																							= 0;
 	virtual		void							add_Shape								(const SBoneShape& shape,const Fmatrix& offset)																		= 0;
 	virtual		CODEGeom						*last_geom								()																													= 0;
+	virtual		CODEGeom*						geometry								( u16 i )																											= 0;
+	virtual		void							add_geom								( CODEGeom* g )																										= 0;
+	virtual		void							remove_geom								( CODEGeom* g )																										= 0;
+	virtual	const IPhysicsGeometry*				geometry								( u16 i )const																										= 0;
+
 	virtual		bool							has_geoms								()																													= 0;
 	virtual		void							add_Mass								(const SBoneShape& shape,const Fmatrix& offset,const Fvector& mass_center,float mass,CPHFracture* fracture=NULL)	= 0;
 	virtual		void							set_ParentElement						(CPhysicsElement* p)																								= 0;
@@ -127,21 +148,29 @@ public:
 	virtual		void							applyImpulseTrace						(const Fvector& pos, const Fvector& dir, float val,const u16 id)													= 0;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	virtual		void							setDensityMC							(float M,const Fvector& mass_center)																				= 0;
+	virtual		void							set_local_mass_center					(const Fvector &mc )																								= 0;
+	virtual		void							setQuaternion							(const Fquaternion& quaternion)																						= 0;
 	virtual		u16								setGeomFracturable						(CPHFracture &fracture)																								= 0;
 	virtual		CPHFracture						&Fracture								(u16 num)																											= 0;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	virtual		u16								numberOfGeoms							()																													= 0;
+	virtual		u16								numberOfGeoms							()const																												= 0;
 	virtual				dBodyID					get_body								()																													= 0;
-	virtual		const	Fvector					&mass_Center							()																													= 0;
+	virtual		const	Fvector					&mass_Center							()const																												= 0;
 	virtual		const	Fvector					&local_mass_Center						()																													= 0;
 	virtual		float							getRadius								()																													= 0;
+	virtual		void							GetGlobalTransformDynamic				(Fmatrix* m) const																									= 0;
 	virtual		dMass							*getMassTensor							()																													= 0;
 	virtual		void							get_MaxAreaDir							(Fvector& dir)																										= 0;
 	virtual		ObjectContactCallbackFun		*get_ObjectContactCallback				()																													= 0;
 	virtual		void							Fix										()																													= 0;
 	virtual		void							ReleaseFixed							()																													= 0;
 	virtual		bool							isFixed									()																													= 0;
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////IPhysicsElement////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	virtual	const	Fmatrix						&XFORM									()							const																					{ return CPhysicsBase::XFORM(); }
+//	virtual			void						get_LinearVel							( Fvector& velocity )		const																					{ get_LinearVel( velocity ); }
+//	virtual			void						get_AngularVel							( Fvector& velocity )		const																					{ get_AngularVel( velocity ); }
+	virtual			void						get_Box									( Fvector&	sz, Fvector& c )const																					{ return	CPhysicsBase::get_Box( sz, c ); }
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	virtual										~CPhysicsElement						()																													{};
 	DECLARE_SCRIPT_REGISTER_FUNCTION
 };
@@ -226,12 +255,11 @@ add_to_type_list(CPhysicsJoint)
 #define script_type_list save_type_list(CPhysicsJoint)
 // ABSTRACT: 
 class CPHIsland;
+class CPhysicsShellAnimator;
 
-#ifdef ANIMATED_PHYSICS_OBJECT_SUPPORT
-	class CPhysicsShellAnimator;
-#endif
-
-class CPhysicsShell			: public CPhysicsBase
+class CPhysicsShell			:
+	public CPhysicsBase,
+	public IPhysicsShell
 {
 protected:
 					IKinematics					*m_pKinematics																															;
@@ -241,10 +269,14 @@ public:
 #endif
 public:
 IC					IKinematics					*PKinematics								()																{return m_pKinematics		;}
+////////////////////////////////////////////////////IPhysicsShell///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+virtual	const		Fmatrix						&XFORM										()const															{ return CPhysicsBase::XFORM(); }
+virtual	const		IPhysicsElement				&Element									( u16 index ) const												{ return *get_ElementByStoreOrder( index );	};
+virtual				void						GetGlobalTransformDynamic					(Fmatrix* m) 																				= 0;
+//virtual			u16							get_ElementsNumber							( )																const	= 0;
 
-#ifdef ANIMATED_PHYSICS_OBJECT_SUPPORT
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	virtual			CPhysicsShellAnimator*		PPhysicsShellAnimator						()																							= 0;
-#endif
 					void						set_Kinematics								(IKinematics* p)														{m_pKinematics=p	;}
 	virtual			void						set_JointResistance							(float force)																				= 0;
 	virtual			void						add_Element									(CPhysicsElement* E)																		= 0;
@@ -259,11 +291,9 @@ IC					IKinematics					*PKinematics								()																{return m_pKinemati
 	virtual			void						SetRagDoll									()																							= 0;
 	virtual			void						SetIgnoreRagDoll							()																							= 0;
 
-#ifdef ANIMATED_PHYSICS_OBJECT_SUPPORT
-	virtual			void						SetAnimated									()																							= 0;
+	virtual			void						CreateShellAnimator							( CInifile* ini, LPCSTR section )															= 0;
 	virtual			void						SetIgnoreAnimated							()																							= 0;
-	virtual			bool						Animated									()																							= 0;
-#endif
+//	virtual			bool						Animated									()																							= 0;
 
 	virtual			void						SetSmall									()																							= 0;
 	virtual			void						SetIgnoreSmall								()																							= 0;
@@ -279,6 +309,9 @@ IC					IKinematics					*PKinematics								()																{return m_pKinemati
 	virtual			BoneCallbackFun*			GetBonesCallback							()																							= 0;
 	virtual			BoneCallbackFun*			GetStaticObjectBonesCallback				()																							= 0;
 	virtual			void						Update										()																							= 0;
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	virtual			void						get_LinearVel								(Fvector& velocity) const																								= 0;
+	virtual			void						get_AngularVel								(Fvector& velocity)	const																								= 0;
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	virtual			void						setMass1									(float M)																					= 0;
 	virtual			void						SmoothElementsInertia						(float k)																					= 0;
@@ -289,7 +322,9 @@ IC					IKinematics					*PKinematics								()																{return m_pKinemati
 	virtual			CPhysicsElement				*get_Element								(const shared_str & bone_name)																= 0;
 	virtual			CPhysicsElement				*get_Element								(LPCSTR bone_name)																			= 0;
 	virtual			CPhysicsElement				*get_ElementByStoreOrder					(u16 num)																					= 0;
-	virtual			u16							get_ElementsNumber							()																							= 0;
+	virtual	const CPhysicsElement				*get_ElementByStoreOrder					(u16 num) const																				= 0;
+	virtual			CPhysicsElement				*get_PhysicsParrentElement					( u16 bone_id )																				= 0;
+	virtual			u16							get_ElementsNumber							()const																						= 0;
 	virtual			CPHSynchronize				*get_ElementSync							(u16 element)																				= 0;
 	virtual			CPhysicsJoint				*get_Joint									(u16 bone_id)																				= 0;
 	virtual			CPhysicsJoint				*get_Joint									(const shared_str & bone_name)																= 0;
@@ -309,18 +344,23 @@ IC					IKinematics					*PKinematics								()																{return m_pKinemati
 	virtual			void						PureStep									(float step = fixed_step)																	= 0;
 	virtual			void						SetGlTransformDynamic						(const Fmatrix &form)																		= 0;
 	virtual			void						CollideAll									()																							= 0;
-	virtual			CPhysicsElement				*NearestToPoint								(const Fvector& point)																		= 0;
+	virtual			CPhysicsElement				*NearestToPoint								(const Fvector& point, NearestToPointCallback *cb = 0 )										= 0;
 	virtual			void						build_FromKinematics						(IKinematics* K,BONE_P_MAP* p_geting_map=NULL)												= 0;
 	virtual			void						preBuild_FromKinematics						(IKinematics* K,BONE_P_MAP* p_geting_map=NULL)												= 0;
 	virtual			void						Build										(bool disable=false)																		= 0;
 	virtual			void						SetMaxAABBRadius							(float size)																				 {};
+
 	virtual			void						AddTracedGeom								(u16 element=0,u16 geom=0)																	= 0;
 	virtual			void						SetAllGeomTraced							()																							= 0;
+	virtual			void						ClearTracedGeoms							()																							= 0;
+	virtual			void						DisableGeomTrace							()																							= 0;
+	virtual			void						EnableGeomTrace								()																							= 0;
+
 	virtual			void						RunSimulation								(bool place_current_forms=true)																= 0;
 	virtual			void						UpdateRoot									()																							= 0;
 	virtual			void            		    ZeroCallbacks								()																							= 0;
 	virtual			void						ResetCallbacks								(u16 id,Flags64 &mask)																		= 0;
-	virtual			void						SetCallbacks								(BoneCallbackFun* callback)																	= 0;
+	virtual			void						SetCallbacks								( )																	= 0;
 	virtual			void						EnabledCallbacks							(BOOL val)																					= 0;
 	virtual			void						ToAnimBonesPositions						()																							= 0;
 	virtual			bool						AnimToVelocityState							(float dt, float l_limit, float a_limit )													= 0;
@@ -336,27 +376,29 @@ add_to_type_list(CPhysicsShell)
 #undef script_type_list
 #define script_type_list save_type_list(CPhysicsShell)
 
-void	get_box(CPhysicsShell*	shell,const	Fmatrix& form,	Fvector&	sz,Fvector&	c);
+
 
 // Implementation creator
-CPhysicsJoint*				P_create_Joint				(CPhysicsJoint::enumType type ,CPhysicsElement* first,CPhysicsElement* second)		;
-CPhysicsElement*			P_create_Element			()																					;
-CPhysicsShell*				P_create_Shell				()																					;
-CPhysicsShell*				P_create_splited_Shell		()																					;
-CPhysicsShell*				P_build_Shell				(CGameObject* obj,bool not_active_state,LPCSTR	fixed_bones)						;
-CPhysicsShell*				P_build_Shell				(CGameObject* obj,bool not_active_state,U16Vec& fixed_bones)						;
-CPhysicsShell*				P_build_Shell				(CGameObject* obj,bool not_active_state,BONE_P_MAP* bone_map,LPCSTR	fixed_bones)	;
-CPhysicsShell*				P_build_Shell				(CGameObject* obj,bool not_active_state,BONE_P_MAP* bone_map=NULL)					;
-CPhysicsShell*				P_build_SimpleShell			(CGameObject* obj,float mass,bool not_active_state)									;
-		void				ApplySpawnIniToPhysicShell	(CInifile* ini,CPhysicsShell* physics_shell,bool fixed)								;
-		void				fix_bones					(LPCSTR	fixed_bones,CPhysicsShell* shell )											;
-	
+CPhysicsJoint*				P_create_Joint				(CPhysicsJoint::enumType type ,CPhysicsElement* first,CPhysicsElement* second)								;
+CPhysicsElement*			P_create_Element			()																											;
+CPhysicsShell*				P_create_Shell				()																											;
+CPhysicsShell*				P_create_splited_Shell		()																											;
+CPhysicsShell*				P_build_Shell				(CGameObject* obj,bool not_active_state,LPCSTR	fixed_bones)												;
+CPhysicsShell*				P_build_Shell				(CGameObject* obj,bool not_active_state,U16Vec& fixed_bones)												;
+CPhysicsShell*				P_build_Shell				(CGameObject* obj,bool not_active_state,BONE_P_MAP* bone_map, LPCSTR fixed_bones)							;
+CPhysicsShell*				P_build_Shell				(CGameObject* obj,bool not_active_state,BONE_P_MAP* bone_map = 0, bool not_set_bone_callbacks = false)		;
+CPhysicsShell*				P_build_SimpleShell			(CGameObject* obj,float mass,bool not_active_state)															;
+		void				ApplySpawnIniToPhysicShell	(CInifile* ini,CPhysicsShell* physics_shell,bool fixed)														;
+		void				fix_bones					(LPCSTR	fixed_bones,CPhysicsShell* shell )																	;
+		void				destroy_physics_shell		(CPhysicsShell* &p)																							;
+		void				destroy_physics_shell		(CPhysicsShell* &p)																							;
+
 struct	NearestToPointCallback
-		{
-			virtual	bool operator() (CPhysicsElement* e) = 0;
-		};
-		bool				shape_is_physic(const SBoneShape& shape);
-		bool				has_physics_collision_shapes(IKinematics& K);
-		void				phys_shell_verify_object_model(CObject& O);
-		void				phys_shell_verify_model(IKinematics& K);
+{
+	virtual	bool operator() ( CPhysicsElement* e )	=	0;
+};
+		bool				shape_is_physic					( const SBoneShape& shape );
+		bool				has_physics_collision_shapes	( IKinematics& K );
+		void				phys_shell_verify_object_model	( CObject& O );
+		void				phys_shell_verify_model			( IKinematics& K );
 #endif // PhysicsShellH

@@ -31,6 +31,7 @@ struct CBaseDisableData
 protected:
 				u16							m_count															;
 				u16							m_frames														;
+				u16							m_last_frame_updated											;
 				SDisableUpdateState			m_stateL1														;
 				SDisableUpdateState			m_stateL2														;
 				bool						m_disabled														;

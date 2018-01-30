@@ -2290,6 +2290,9 @@
     <Filter Include="UI\Tutorial">
       <UniqueIdentifier>{b087fe54-dbf2-4202-8176-58f8218af8c8}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Physics\CharacterSupport\death_anims">
+      <UniqueIdentifier>{27e0f61a-840f-4e45-bfa6-55d1e69de015}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="mt_config.h">
@@ -6594,6 +6597,39 @@
     <ClInclude Include="poses_blending.h">
       <Filter>Physics\Base\Objects\BaseShell\animation_movement_controller</Filter>
     </ClInclude>
+    <ClInclude Include="death_anims.h">
+      <Filter>Physics\CharacterSupport\death_anims</Filter>
+    </ClInclude>
+    <ClInclude Include="character_shell_control.h">
+      <Filter>Physics\CharacterSupport</Filter>
+    </ClInclude>
+    <ClInclude Include="interactive_animation.h">
+      <Filter>Physics\CharacterSupport</Filter>
+    </ClInclude>
+    <ClInclude Include="physics_shell_animated.h">
+      <Filter>Physics\CharacterSupport</Filter>
+    </ClInclude>
+    <ClInclude Include="moving_bones_snd_player.h">
+      <Filter>Physics\CharacterSupport</Filter>
+    </ClInclude>
+    <ClInclude Include="imotion_position.h">
+      <Filter>Physics\CharacterSupport</Filter>
+    </ClInclude>
+    <ClInclude Include="imotion_velocity.h">
+      <Filter>Physics\CharacterSupport</Filter>
+    </ClInclude>
+    <ClInclude Include="animation_utils.h">
+      <Filter>Physics\CharacterSupport</Filter>
+    </ClInclude>
+    <ClInclude Include="ActivatingCharCollisionDelay.h">
+      <Filter>Physics\CharacterSupport</Filter>
+    </ClInclude>
+    <ClInclude Include="GeometryBits.h">
+      <Filter>Physics\CharacterSupport</Filter>
+    </ClInclude>
+    <ClInclude Include="animation_script_callback.h">
+      <Filter>Physics\CharacterSupport</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="damage_manager.cpp">
@@ -9766,6 +9802,42 @@
     </ClCompile>
     <ClCompile Include="poses_blending.cpp">
       <Filter>Physics\Base\Objects\BaseShell\animation_movement_controller</Filter>
+    </ClCompile>
+    <ClCompile Include="death_anims_predicates.cpp">
+      <Filter>Physics\CharacterSupport\death_anims</Filter>
+    </ClCompile>
+    <ClCompile Include="death_anims.cpp">
+      <Filter>Physics\CharacterSupport\death_anims</Filter>
+    </ClCompile>
+    <ClCompile Include="character_shell_control.cpp">
+      <Filter>Physics\CharacterSupport</Filter>
+    </ClCompile>
+    <ClCompile Include="interactive_animation.cpp">
+      <Filter>Physics\CharacterSupport</Filter>
+    </ClCompile>
+    <ClCompile Include="physics_shell_animated.cpp">
+      <Filter>Physics\CharacterSupport</Filter>
+    </ClCompile>
+    <ClCompile Include="moving_bones_snd_player.cpp">
+      <Filter>Physics\CharacterSupport</Filter>
+    </ClCompile>
+    <ClCompile Include="imotion_position.cpp">
+      <Filter>Physics\CharacterSupport</Filter>
+    </ClCompile>
+    <ClCompile Include="imotion_velocity.cpp">
+      <Filter>Physics\CharacterSupport</Filter>
+    </ClCompile>
+    <ClCompile Include="animation_utils.cpp">
+      <Filter>Physics\CharacterSupport</Filter>
+    </ClCompile>
+    <ClCompile Include="ActivatingCharCollisionDelay.cpp">
+      <Filter>Physics\CharacterSupport</Filter>
+    </ClCompile>
+    <ClCompile Include="GeometryBits.cpp">
+      <Filter>Physics\CharacterSupport</Filter>
+    </ClCompile>
+    <ClCompile Include="animation_script_callback.cpp">
+      <Filter>Physics\CharacterSupport</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
