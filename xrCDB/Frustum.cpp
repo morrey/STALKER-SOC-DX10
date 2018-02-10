@@ -108,35 +108,23 @@ EFC_Visible	CFrustum::testAABB			(const float* mM, u32& test_mask) const
 	return test_mask ? fcvPartial:fcvFully;
 }
 
-EFC_Visible CFrustum::testSAABB(Fvector& c, float r, const float* mM, u32& test_mask) const
+EFC_Visible	CFrustum::testSAABB			(Fvector& c, float r, const float* mM, u32& test_mask) const
 {
-	u32 bit = 1;
-	for (int i = 0; i < p_count; i++, bit <<= 1)
+	u32	bit = 1;
+	for (int i=0; i<p_count; i++, bit<<=1)
 	{
-		if (test_mask & bit)
-		{
+		if (test_mask&bit) {
 			float cls = planes[i].classify(c);
-			if (cls > r)
-			{
-				test_mask = 0;
-				return fcvNone;
-			} // none  - return
-			if (_abs(cls) >= r)
-				test_mask &= ~bit; // fully - no need to test this plane
-			else
-			{
-				EFC_Visible r = AABB_OverlapPlane(planes[i], mM);
-				if (fcvFully == r)
-					test_mask &= ~bit; // fully - no need to test this plane
-				else if (fcvNone == r)
-				{
-					test_mask = 0;
-					return fcvNone;
-				} // none - return
+			if (cls>r) { test_mask=0; return fcvNone;}	// none  - return
+			if (_abs(cls)>=r) test_mask&=~bit;			// fully - no need to test this plane
+			else {
+				EFC_Visible	r	= AABB_OverlapPlane(planes[i],mM);
+				if (fcvFully==r)	test_mask&=~bit;					// fully - no need to test this plane
+				else if (fcvNone==r){ test_mask=0; return fcvNone;	}	// none - return
 			}
 		}
 	}
-	return test_mask ? fcvPartial : fcvFully;
+	return test_mask ? fcvPartial:fcvFully;
 }
 
 BOOL		CFrustum::testPolyInside_dirty(Fvector* p, int count) const
@@ -283,7 +271,7 @@ void CFrustum::CreateOccluder(Fvector* p, int count, Fvector& vBase, CFrustum& c
 	// here we have all edges marked accordenly to 'open' / 'closed' classification
 	_clear	();
 	_add	(p[0],p[1],p[2]);		// main plane
-	for (int i = 0; i < count; i++)
+	for (int i=0; i<count; i++)
 	{
 		if (!edge[i]) {
 			int next = i+1; if (next>=count) next=0;
@@ -305,13 +293,13 @@ sPoly*	CFrustum::ClipPoly(sPoly& S, sPoly& D) const
 
 		// classify all points relative to plane #i
 		float	cls	[FRUSTUM_SAFE];
-		for (u32 j = 0; j<src->size(); j++) cls[j]=P.classify((*src)[j]);
+		for (u32 j=0; j<src->size(); j++) cls[j]=P.classify((*src)[j]);
 
 		// clip everything to this plane
 		cls[src->size()] = cls[0];
 		src->push_back((*src)[0]);
 		Fvector D; float denum,t;
-		for (u32 j = 0; j<src->size()-1; j++)
+		for (u32 j=0; j<src->size()-1; j++)
 		{
 			if ((*src)[j].similar((*src)[j+1],EPS_S)) continue;
 

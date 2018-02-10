@@ -7,7 +7,7 @@
 #include "UITextureMaster.h"
 #include "../../xr_input.h"
 
-#define DEF_CONTROL_HEIGHT		21
+#define DEF_CONTROL_HEIGHT		21.0f
 #define FRAME_LINE_TEXTURE		"ui_slider_e"
 #define FRAME_LINE_TEXTURE_D	"ui_slider_d"
 #define SLIDER_TEXTURE			"ui_slider_button"
@@ -17,9 +17,9 @@ CUITrackBar::CUITrackBar()
 	  m_f_max(1),
 	  m_f_val(0),
 	  m_f_back_up(0),
-	 m_f_step(0.01f),
-	m_b_is_float(true),
-	m_b_invert(false)
+	  m_f_step(0.01f),
+      m_b_is_float(true),
+      m_b_invert(false)
 {	
 	m_pFrameLine					= xr_new<CUIFrameLineWnd>();	
 	AttachChild						(m_pFrameLine);	
@@ -215,32 +215,32 @@ void CUITrackBar::UpdatePos()
 
 #endif
 
-	float btn_width				= m_pSlider->GetWidth();
-	float window_width			= GetWidth();		
-	float free_space			= window_width - btn_width;
-	Fvector2 pos				= m_pSlider->GetWndPos();
-    
-	float __fval	= (m_b_is_float)?m_f_val:(float)m_i_val;
-	float __fmax	= (m_b_is_float)?m_f_max:(float)m_i_max;
-	float __fmin	= (m_b_is_float)?m_f_min:(float)m_i_min;
+	float btn_width = m_pSlider->GetWidth();
+	float window_width = GetWidth();
+	float free_space = window_width - btn_width;
+	Fvector2 pos = m_pSlider->GetWndPos();
+
+	float __fval = (m_b_is_float) ? m_f_val : (float)m_i_val;
+	float __fmax = (m_b_is_float) ? m_f_max : (float)m_i_max;
+	float __fmin = (m_b_is_float) ? m_f_min : (float)m_i_min;
 
 
-	pos.x						= (__fval - __fmin)*free_space/(__fmax - __fmin);
-	if( GetInvert() )
-		pos.x					= free_space-pos.x;
+	pos.x = (__fval - __fmin)*free_space / (__fmax - __fmin);
+	if (GetInvert())
+		pos.x = free_space - pos.x;
 
-	m_pSlider->SetWndPos		(pos);
+	m_pSlider->SetWndPos(pos);
 	SaveValue					();
 }
 
 void CUITrackBar::OnMessage(const char* message)
 {
-	if (0 == xr_strcmp(message,"set_default_value"))
+	if (0 == xr_strcmp(message, "set_default_value"))
 	{
-		if(m_b_is_float)
-			m_f_val = m_f_min + (m_f_max - m_f_min)/2.0f;
+		if (m_b_is_float)
+			m_f_val = m_f_min + (m_f_max - m_f_min) / 2.0f;
 		else
-			m_i_val = m_i_min + iFloor((m_i_max - m_i_min)/2.0f);
+			m_i_val = m_i_min + iFloor((m_i_max - m_i_min) / 2.0f);
 
 		UpdatePos();
 	}

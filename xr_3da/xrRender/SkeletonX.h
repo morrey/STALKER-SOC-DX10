@@ -82,13 +82,13 @@ public:
 	virtual BOOL			PickBone		(IKinematics::pick_result &r, float dist, const Fvector& start, const Fvector& dir, u16 bone_id)=0;
 	virtual void			FillVertices	(const Fmatrix& view, CSkeletonWallmark& wm, const Fvector& normal, float size, u16 bone_id)=0;
 
-#if defined(USE_DX10) || defined(USE_OGL)
+//#if defined(USE_DX10) || defined(USE_DX11) || defined(USE_OGL)
 protected:
 	void			_DuplicateIndices(const char* N, IReader *data);
 
 	//	Index buffer replica since we can't read from index buffer in DX10
 	ref_smem<u16>			m_Indices;
-#endif	//	USE_DX10 || USE_OGL
+//#endif	//	USE_DX10 || USE_OGL
 };
 
 template<typename T_vertex, typename T_buffer >
@@ -113,7 +113,7 @@ BOOL pick_bone(T_buffer vertices, CKinematics* Parent, IKinematics::pick_result 
 	return FALSE;
 }
 
-#if defined(USE_DX10) || defined(USE_OGL)
+#if defined(USE_DX10) || defined(USE_DX11) || defined(USE_OGL)
 template<typename T>
 BOOL pick_bone(CKinematics* Parent, IKinematics::pick_result &r, float dist, const Fvector& S, const Fvector& D, Fvisual* V, u16* indices, CBoneData::FacesVec& faces)
 {

@@ -84,8 +84,8 @@ void CTextureDescrMngr::LoadLTX()
 				{
 					// bump-map specified
 					desc.m_spec->m_bump_name = bmode + 4;
-					desc.m_spec->m_use_steep_parallax = true;
 				}
+				desc.m_spec->m_use_steep_parallax = false;
 			}
 		}//"specification"
 #ifdef _EDITOR

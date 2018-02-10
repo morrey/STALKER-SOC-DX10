@@ -15,7 +15,6 @@
 #include "inventory.h"
 #include "../CameraBase.h"
 
-
 CHudItem::CHudItem(void)
 {
 	m_pHUD = NULL;

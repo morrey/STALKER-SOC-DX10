@@ -11,7 +11,7 @@
 #include "ai_space.h"
 #include "script_engine.h"
 
-IC	bool compare_safe(const luabind::object &o1 , const luabind::object &o2)
+IC	bool compare_safe(const luabind::object &o1, const luabind::object &o2)
 {
 	if ((o1.type() == LUA_TNIL) && (o2.type() == LUA_TNIL))
 		return						(true);
@@ -83,19 +83,19 @@ protected:
 	object_type						m_object;
 
 private:
-	IC			bool				empty					() const;
+	IC			bool				empty() const;
 
 public:
-	IC								CScriptCallbackEx_		();
-	IC								CScriptCallbackEx_		(const CScriptCallbackEx_ &callback);
-	IC	virtual						~CScriptCallbackEx_		();
+	IC								CScriptCallbackEx_();
+	IC								CScriptCallbackEx_(const CScriptCallbackEx_ &callback);
+	IC	virtual						~CScriptCallbackEx_();
 	IC			CScriptCallbackEx_	&operator=				(const CScriptCallbackEx_ &callback);
-	IC			bool				operator==				(const CScriptCallbackEx_ &callback)const{return compare_safe(m_object,(callback.m_object))&&m_functor==(callback.m_functor);}
-	IC			bool				operator==				(const object_type	&object)		const{return compare_safe(m_object,object);}
-	IC			void				set						(const functor_type &functor);
-	IC			void				set						(const functor_type &functor, const object_type &object);
-	IC			void				clear					();
-	IC			operator			unspecified_bool_type	() const {return (!m_functor.is_valid() ? 0 : &CScriptCallbackEx_::empty);}
+	IC			bool				operator==				(const CScriptCallbackEx_ &callback)const { return compare_safe(m_object, (callback.m_object)) && m_functor == (callback.m_functor); }
+	IC			bool				operator==				(const object_type	&object)		const { return compare_safe(m_object, object); }
+	IC			void				set(const functor_type &functor);
+	IC			void				set(const functor_type &functor, const object_type &object);
+	IC			void				clear();
+	IC			operator unspecified_bool_type	() const { return (!m_functor.is_valid() ? 0 : &CScriptCallbackEx_::empty); }
 };
 
 #include "script_callback_ex_inline.h"

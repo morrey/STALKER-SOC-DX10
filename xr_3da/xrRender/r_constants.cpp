@@ -59,7 +59,7 @@ ref_constant R_constant_table::get	(shared_str& S)
 	return	0;
 }
 
-#if	!defined(USE_DX10) && !defined(USE_OGL)
+#if	!defined(USE_DX10) || defined(USE_DX11) && !defined(USE_OGL)
 BOOL	R_constant_table::parse	(void* _desc, u16 destination)
 {
 	D3DXSHADER_CONSTANTTABLE* desc	= (D3DXSHADER_CONSTANTTABLE*) _desc;

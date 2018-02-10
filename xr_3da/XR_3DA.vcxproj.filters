@@ -427,6 +427,7 @@
     <ClInclude Include="SkeletonMotionDefs.h" />
     <ClInclude Include="xrSASH.h" />
     <ClInclude Include="xr_input_xinput.h" />
+    <ClInclude Include="lua_tools.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="defines.cpp">
@@ -715,6 +716,10 @@
     <ClCompile Include="xr_input_xinput.cpp" />
     <ClCompile Include="XR_IOConsole_callback.cpp" />
     <ClCompile Include="XR_IOConsole_get.cpp" />
+    <ClCompile Include="XR_IOConsole_control.cpp">
+      <Filter>Engine\Console</Filter>
+    </ClCompile>
+    <ClCompile Include="lua_tools.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Resource Include="OutOfVirtError.RES">

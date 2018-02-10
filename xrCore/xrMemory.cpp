@@ -60,27 +60,14 @@ void	xrMemory::_initialize(BOOL bDebug)
 #endif // DEBUG_MEMORY_MANAGER
 
 	stat_calls = 0;
-	stat_counter = 0
-		;
-	u32	features = CPU::ID.feature & CPU::ID.os_support;
-	if (features & _CPU_FEATURE_MMX)
-	{
-		mem_copy = xrMemCopy_MMX;
-		mem_fill = xrMemFill_x86;
-		mem_fill32 = xrMemFill32_MMX;
-	}
-	else {
-		mem_copy = xrMemCopy_x86;
-		mem_fill = xrMemFill_x86;
-		mem_fill32 = xrMemFill32_x86;
-	}
-
+	stat_counter = 0;
 #ifndef M_BORLAND
-	if (!strstr(Core.Params, "-pure_alloc")) {
+	if (!strstr(Core.Params, "-pure_alloc"))
+	{
 		// initialize POOLs
-		u32	element = mem_pools_ebase;
+		u32 element = mem_pools_ebase;
 		u32 sector = mem_pools_ebase * 1024;
-		for (u32 pid = 0; pid<mem_pools_count; pid++)
+		for (u32 pid = 0; pid < mem_pools_count; pid++)
 		{
 			mem_pools[pid]._initialize(element, sector, 0x1);
 			element += mem_pools_ebase;
@@ -89,18 +76,20 @@ void	xrMemory::_initialize(BOOL bDebug)
 #endif // M_BORLAND
 
 #ifdef DEBUG_MEMORY_MANAGER
-	if (0 == strstr(Core.Params, "-memo"))	mem_initialized = TRUE;
-	else								g_bMEMO = TRUE;
+	if (0 == strstr(Core.Params, "-memo"))
+		mem_initialized = TRUE;
+	else
+		g_bMEMO = TRUE;
 #else // DEBUG_MEMORY_MANAGER
 	mem_initialized = TRUE;
 #endif // DEBUG_MEMORY_MANAGER
 
-	//	DUMP_PHASE;
+	// DUMP_PHASE;
 	g_pStringContainer = new str_container();
 	shared_str_initialized = true;
-	//	DUMP_PHASE;
+	// DUMP_PHASE;
 	g_pSharedMemoryContainer = new smem_container();
-	//	DUMP_PHASE;
+	// DUMP_PHASE;
 }
 
 #ifdef DEBUG_MEMORY_MANAGER

@@ -133,6 +133,7 @@ protected:
 	float m_fDeltaCircumspection;
 	float m_fDeltaEntityMorale;
 
+	public:
 	struct SConditionChangeV
 	{
 		float			m_fV_Radiation;
@@ -147,6 +148,8 @@ protected:
 	};
 
 	SConditionChangeV m_change_v;
+
+protected:
 
 	float				m_fMinWoundSize;
 	bool				m_bIsBleeding;

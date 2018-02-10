@@ -11,12 +11,10 @@
 
 #include "stdafx.h"
 
-
 extern "C" {
-	#include <lua.h>
-	#include <lualib.h>
-	#include <lauxlib.h>
-	#include <luajit.h>
+#include <lua.h>
+#include <lualib.h>
+#include <lauxlib.h>
 };
 
 #pragma warning(push)

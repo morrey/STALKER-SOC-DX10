@@ -92,6 +92,7 @@ public:
 			CScriptDebugger		*debugger					();
 #endif
 			void				collect_all_garbage			();
+			LPCSTR				try_call					(LPCSTR func_name, LPCSTR param);
 
 	DECLARE_SCRIPT_REGISTER_FUNCTION
 };
@@ -100,3 +101,7 @@ add_to_type_list(CScriptEngine)
 #define script_type_list save_type_list(CScriptEngine)
 
 #include "script_engine_inline.h"
+
+extern DLL_API void log_script_error(LPCSTR format, ...);
+extern DLL_API lua_State* game_lua();
+extern DLL_API LPCSTR try_call_luafunc(LPCSTR func_name, LPCSTR param);

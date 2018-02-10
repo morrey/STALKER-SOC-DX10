@@ -281,7 +281,7 @@
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <DisableSpecificWarnings>4237;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalIncludeDirectories>$(SolutionDir)xrCore\;$(SolutionDir)third-party\loki;$(SolutionDir)xrLua\src;$(SolutionDir)third-party\luabind-custom\;$(SolutionDir)third-party\boost;$(SolutionDir)third-party\</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)xrCore\;$(SolutionDir)third-party\loki;$(SolutionDir)third-party\luabind\;$(SolutionDir)third-party\boost;$(SolutionDir)third-party\;$(SolutionDir)\luajit\src;$(SolutionDir)Luabind\</AdditionalIncludeDirectories>
       <AdditionalOptions>/Gw %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <ResourceCompile>
@@ -302,6 +302,7 @@
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
       <ImportLibrary>$(SolutionDir)..\lib\$(ProjectName).lib</ImportLibrary>
       <AdditionalLibraryDirectories>$(SolutionDir)..\lib\</AdditionalLibraryDirectories>
+      <AdditionalDependencies>luabind.lib;luajit.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug_Priquel|Win32'">
@@ -1525,6 +1526,7 @@
     <ClInclude Include="script_ui_registrator.h" />
     <ClInclude Include="script_value_container.h" />
     <ClInclude Include="script_value_container_impl.h" />
+    <ClInclude Include="script_vars_storage.h" />
     <ClInclude Include="script_watch_action.h" />
     <ClInclude Include="script_watch_action_inline.h" />
     <ClInclude Include="script_world_property.h" />
@@ -5125,6 +5127,7 @@
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">pch_script.h</PrecompiledHeaderFile>
       <PrecompiledHeaderOutputFile Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)$(ProjectName)_script.pch</PrecompiledHeaderOutputFile>
     </ClCompile>
+    <ClCompile Include="script_vars_storage.cpp" />
     <ClCompile Include="script_watch_action.cpp" />
     <ClCompile Include="script_watch_action_script.cpp">
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Debug_Priquel|Win32'">pch_script.h</PrecompiledHeaderFile>
@@ -6787,10 +6790,6 @@
     </ProjectReference>
     <ProjectReference Include="..\..\xrCore\xrCore.vcxproj">
       <Project>{a0f7d1fb-59a7-4717-a7e4-96f37e91998e}</Project>
-      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-    </ProjectReference>
-    <ProjectReference Include="..\..\xrLua\xrLua.vcxproj">
-      <Project>{9ace5473-6d68-4b96-ac42-b39eaba0fe1f}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
     <ProjectReference Include="..\..\xrNetServer\xrNetServer.vcxproj">

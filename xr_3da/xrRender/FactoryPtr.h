@@ -91,5 +91,4 @@ void FactoryPtr<IStatsRender>::DestroyObject(void)
 }
 */
 
-
 #endif	//	FactoryPtr_included

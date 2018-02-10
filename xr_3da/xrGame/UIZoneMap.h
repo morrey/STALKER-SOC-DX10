@@ -19,6 +19,7 @@ class CUIZoneMap
 	CUIStatic					m_clipFrame;
 	CUIStatic					m_pointerDistanceText;
 
+	u8							m_current_map_idx;
 public:
 	CUIZoneMap();
 	virtual						~CUIZoneMap();
@@ -37,5 +38,6 @@ public:
 
 	CUIStatic&					Background() { return m_background; };
 	void						SetupCurrentMap();
+	void						OnSectorChanged(int sector);
 };
 

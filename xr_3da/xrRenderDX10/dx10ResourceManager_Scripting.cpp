@@ -172,18 +172,18 @@ void LuaError(lua_State* L)
 // export
 void	CResourceManager::LS_Load			()
 {
-	LSVM			= lua_newstate(lua_alloc, NULL);
-	if (!LSVM)		{
-		Msg			("! ERROR : Cannot initialize LUA VM!");
+	LSVM = lua_newstate(lua_alloc, NULL);
+	if (!LSVM) {
+		Msg("! ERROR : Cannot initialize LUA VM!");
 		return;
 	}
 
 	// initialize lua standard library functions 
-	luaopen_base	(LSVM); 
-	luaopen_table	(LSVM);
-	luaopen_string	(LSVM);
-	luaopen_math	(LSVM);
-	luaopen_jit		(LSVM);
+	luaopen_base(LSVM);
+	luaopen_table(LSVM);
+	luaopen_string(LSVM);
+	luaopen_math(LSVM);
+	luaopen_jit(LSVM);
 
 	luabind::open						(LSVM);
 #if !XRAY_EXCEPTIONS

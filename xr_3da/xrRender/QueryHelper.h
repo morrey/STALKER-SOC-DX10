@@ -46,7 +46,7 @@ IC HRESULT ReleaseQuery(GLuint query)
 	return S_OK;
 }
 
-#elif defined(USE_DX10) // USE_OGL
+#elif defined(USE_DX10) || defined(USE_DX11) // USE_OGL
 
 //	Interface
 IC HRESULT CreateQuery( ID3DQuery **ppQuery);

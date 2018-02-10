@@ -22,6 +22,37 @@ xr_token							vid_bpp_token							[ ]={
 	{ "32",							32											},
 	{ 0,							0											}
 };
+
+//-----------------------------------------------------------------------
+
+void IConsole_Command::add_to_LRU(shared_str const& arg)
+{
+	if (arg.size() == 0 || bEmptyArgsHandled)
+	{
+		return;
+	}
+
+	bool dup = (std::find(m_LRU.begin(), m_LRU.end(), arg) != m_LRU.end());
+	if (!dup)
+	{
+		m_LRU.push_back(arg);
+		if (m_LRU.size() > LRU_MAX_COUNT)
+		{
+			m_LRU.erase(m_LRU.begin());
+		}
+	}
+}
+
+void IConsole_Command::add_LRU_to_tips(vecTips& tips)
+{
+	vecLRU::reverse_iterator it_rb = m_LRU.rbegin();
+	vecLRU::reverse_iterator it_re = m_LRU.rend();
+	for (; it_rb != it_re; ++it_rb)
+	{
+		tips.push_back((*it_rb));
+	}
+}
+
 //-----------------------------------------------------------------------
 class CCC_Quit : public IConsole_Command
 {

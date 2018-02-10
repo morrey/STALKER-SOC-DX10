@@ -14,32 +14,32 @@ CEngine				Engine;
 
 CEngine::CEngine()
 {
-	
+
 }
 
 CEngine::~CEngine()
 {
-	
+
 }
 
-extern	void msCreate		(LPCSTR name);
+extern	void msCreate(LPCSTR name);
 
-PROTECT_API void CEngine::Initialize	(void)
+PROTECT_API void CEngine::Initialize(void)
 {
 	// Other stuff
-	Engine.Sheduler.Initialize			( );
+	Engine.Sheduler.Initialize();
 	// 
 #ifdef DEBUG
-	msCreate							("game");
+	msCreate("game");
 #endif
 }
 
-void CEngine::Destroy	()
+void CEngine::Destroy()
 {
-	Engine.Sheduler.Destroy				( );
+	Engine.Sheduler.Destroy();
 #ifdef DEBUG_MEMORY_MANAGER
-	extern void	dbg_dump_leaks_prepare	( );
-	if (Memory.debug_mode)				dbg_dump_leaks_prepare	();
+	extern void	dbg_dump_leaks_prepare();
+	if (Memory.debug_mode)				dbg_dump_leaks_prepare();
 #endif // DEBUG_MEMORY_MANAGER
-	Engine.External.Destroy				( );
+	Engine.External.Destroy();
 }

@@ -14,11 +14,20 @@ public		:
 	friend class	CConsole;
 	typedef char	TInfo	[256];
 	typedef char	TStatus	[256];
+	typedef xr_vector<shared_str> vecTips;
+	typedef xr_vector<shared_str> vecLRU;
 protected	:
 	LPCSTR			cName;
 	bool			bEnabled;
 	bool			bLowerCaseArgs;
 	bool			bEmptyArgsHandled;
+
+	vecLRU m_LRU;
+
+	enum
+	{
+		LRU_MAX_COUNT = 10
+	};
 
 	IC	bool		EQ(LPCSTR S1, LPCSTR S2) { return xr_strcmp(S1,S2)==0; }
 public		:
@@ -27,7 +36,10 @@ public		:
 	  bEnabled			(TRUE),
 	  bLowerCaseArgs	(TRUE),
 	  bEmptyArgsHandled	(FALSE)
-	{};
+	{
+		m_LRU.reserve(LRU_MAX_COUNT + 1);
+		m_LRU.clear_not_free();
+	};
 	virtual ~IConsole_Command()
 	{
 		if(Console)
@@ -50,6 +62,10 @@ public		:
 		TStatus		S;	Status(S);
 		if (S[0])	F->w_printf("%s %s\r\n",cName,S); 
 	}
+	virtual void fill_tips(vecTips& tips, u32 mode) { add_LRU_to_tips(tips); }
+	// vecLRU& LRU () { return m_LRU; }
+	virtual void add_to_LRU(shared_str const& arg);
+	void add_LRU_to_tips(vecTips& tips);
 };
 
 class ENGINE_API	CCC_Mask : public IConsole_Command
@@ -168,7 +184,12 @@ public		:
 	  const float	GetValue	() const {return *value;};
 	  const float	GetMin		() const {return min;};
 	  const float	GetMax		() const {return max;};
-
+	  
+	  void GetBounds(float& fmin, float& fmax) const
+	  {
+		  fmin = min;
+		  fmax = max;
+	  }
 	virtual void	Execute	(LPCSTR args)
 	{
 		float v = float(atof(args));
@@ -228,6 +249,11 @@ protected	:
 	int				min,max;
 public		:
 	  const int GetValue	() const {return *value;};
+	  void GetBounds(int& imin, int& imax) const
+	  {
+		  imin = min;
+		  imax = max;
+	  }
 	  const int GetMin		() const {return min;};
 	  const int GetMax		() const {return max;};
 

@@ -15,7 +15,7 @@ void CBackend::OnFrameEnd	()
 	if (!g_dedicated_server)
 #endif    
 	{
-#if defined(USE_DX10) || defined(USE_OGL)
+#if defined(USE_DX10) || defined(USE_DX11) || defined(USE_OGL)
 #ifndef USE_OGL
 		HW.pDevice->ClearState();
 #endif // !USE_OGL
@@ -132,7 +132,7 @@ void CBackend::Invalidate	()
 
 void	CBackend::set_ClipPlanes	(u32 _enable, Fplane*	_planes /*=NULL */, u32 count/* =0*/)
 {
-#if defined(USE_DX10) || defined(USE_OGL)
+#if defined(USE_DX10) || defined(USE_DX11) || defined(USE_OGL)
 	//	TODO: DX10: Implement in the corresponding vertex shaders
 	//	Use this to set up location, were shader setup code will get data
 	//VERIFY(!"CBackend::set_ClipPlanes not implemented!");
@@ -172,7 +172,7 @@ void	CBackend::set_ClipPlanes	(u32 _enable, Fmatrix*	_xform  /*=NULL */, u32 fma
 	if (0==HW.Caps.geometry.dwClipPlanes)	return;
 #endif // !USE_OGL
 	if (!_enable)	{
-#if defined(USE_DX10) || defined(USE_OGL)
+#if defined(USE_DX10) || defined(USE_DX11) || defined(USE_OGL)
 		//	TODO: DX10: Implement in the corresponding vertex shaders
 		//	Use this to set up location, were shader setup code will get data
 		//VERIFY(!"CBackend::set_ClipPlanes not implemented!");

@@ -18,8 +18,9 @@ namespace PS
 	class ECORE_API CParticleEffect : public dxParticleCustom
 	{
 		friend class CPEDef;
-	protected:
+	public:
 		CPEDef*				m_Def;
+	protected:
 
 		float				m_fElapsedLimit;
 

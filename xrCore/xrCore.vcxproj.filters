@@ -76,6 +76,9 @@
     <Filter Include="os">
       <UniqueIdentifier>{73bdfd1b-ed10-4fcc-91ad-c4e4ecd8382a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="string">
+      <UniqueIdentifier>{6f463363-1184-429f-acc7-1fe1c5720296}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="FTimer.cpp">
@@ -264,6 +267,9 @@
     </ClCompile>
     <ClCompile Include="xrAPI.cpp">
       <Filter>Kernel</Filter>
+    </ClCompile>
+    <ClCompile Include="string_concatenations.cpp">
+      <Filter>string</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -543,6 +549,12 @@
     </ClInclude>
     <ClInclude Include="xrAPI.hpp">
       <Filter>Kernel</Filter>
+    </ClInclude>
+    <ClInclude Include="string_concatenations_inline.h">
+      <Filter>string</Filter>
+    </ClInclude>
+    <ClInclude Include="string_concatenations.h">
+      <Filter>string</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

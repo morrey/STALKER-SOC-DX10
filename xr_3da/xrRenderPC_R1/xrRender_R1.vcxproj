@@ -123,7 +123,7 @@
       <OmitFramePointers>true</OmitFramePointers>
       <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
       <WholeProgramOptimization>true</WholeProgramOptimization>
-      <AdditionalIncludeDirectories>.\;$(SolutionDir)engine;$(SolutionDir)sdk\include;$(DXSDK_DIR)Include;$(SolutionDir)3rd party;%(AdditionalIncludeDirectories);$(SolutionDir)third-party\;$(SolutionDir)third-party\loki;$(SolutionDir)third-party\luabind-custom\;$(SolutionDir)xrLua\src;$(SolutionDir)xrCore\;$(SolutionDir)third-party\boost;$(SolutionDir)third-party\NVTT\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.\;$(SolutionDir)engine;$(SolutionDir)sdk\include;$(DXSDK_DIR)Include;$(SolutionDir)3rd party;%(AdditionalIncludeDirectories);$(SolutionDir)third-party\;$(SolutionDir)third-party\loki;$(SolutionDir)third-party\luabind\;$(SolutionDir)third-party\luajit\src;$(SolutionDir)xrCore\;$(SolutionDir)third-party\boost;$(SolutionDir)third-party\NVTT\include;$(SolutionDir)\luajit\src;$(SolutionDir)Luabind\</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;XRRENDER_R1_EXPORTS;_SECURE_SCL=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <ExceptionHandling>Sync</ExceptionHandling>
@@ -146,7 +146,7 @@
       <AdditionalOptions>/Gw %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>nvapi.lib;xrLua.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>nvapi.lib;luabind.lib;luajit.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(SolutionDir)sdk\libraries;$(SolutionDir)libraries\$(Configuration);$(DXSDK_DIR)Lib\x86;$(AdditionalLibraryDirectories);$(SolutionDir)third-party\nvapi\x86;$(SolutionDir)..\lib\</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>$(OutDir)$(TargetName).pdb</ProgramDatabaseFile>
@@ -158,7 +158,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
       <SupportUnloadOfDelayLoadedDLL>false</SupportUnloadOfDelayLoadedDLL>
-      <ImportLibrary>$(SolutionDir)libraries\$(Configuration)\$(TargetName).lib</ImportLibrary>
+      <ImportLibrary>$(SolutionDir)..\lib\$(ProjectName).lib</ImportLibrary>
       <TargetMachine>MachineX86</TargetMachine>
       <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
     </Link>

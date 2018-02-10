@@ -6630,6 +6630,9 @@
     <ClInclude Include="animation_script_callback.h">
       <Filter>Physics\CharacterSupport</Filter>
     </ClInclude>
+    <ClInclude Include="script_vars_storage.h">
+      <Filter>AI\AScript\ScriptStorage</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="damage_manager.cpp">
@@ -9838,6 +9841,9 @@
     </ClCompile>
     <ClCompile Include="animation_script_callback.cpp">
       <Filter>Physics\CharacterSupport</Filter>
+    </ClCompile>
+    <ClCompile Include="script_vars_storage.cpp">
+      <Filter>AI\AScript\ScriptStorage</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

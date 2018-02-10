@@ -1153,6 +1153,11 @@ void CUIMainIngameWnd::OnConnected()
 	UIZoneMap->SetupCurrentMap();
 }
 
+void CUIMainIngameWnd::OnSectorChanged(int sector)
+{
+	UIZoneMap->OnSectorChanged(sector);
+}
+
 void CUIMainIngameWnd::reset_ui()
 {
 	m_pActor = NULL;

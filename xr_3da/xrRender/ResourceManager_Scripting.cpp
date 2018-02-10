@@ -1,15 +1,17 @@
 #include "stdafx.h"
 #pragma hdrstop
 
-//#include    <lua/library_linkage.h>
+//#include    <library_linkage.h>
 
 #include	"../Render.h"
 #include	"ResourceManager.h"
 #include	"tss.h"
 #include	"blenders/Blender.h"
 #include	"blenders/Blender_Recorder.h"
+
 #include	"../ai_script_lua_space.h"
 #include	"../ai_script_lua_extension.h"
+
 #include	"luabind/return_reference_to_policy.hpp"
 
 #include	"dxRenderDeviceRender.h"
@@ -124,104 +126,105 @@ void LuaError(lua_State* L)
 #endif // USE_DL_ALLOCATOR
 
 // export
-void	CResourceManager::LS_Load			()
+void	CResourceManager::LS_Load()
 {
-	LSVM			= lua_newstate(lua_alloc, NULL);
-	if (!LSVM)		{
-		Msg			("! ERROR : Cannot initialize LUA VM!");
+	LSVM = lua_newstate(lua_alloc, NULL);
+	if (!LSVM) {
+		Msg("! ERROR : Cannot initialize LUA VM!");
 		return;
 	}
 
 	// initialize lua standard library functions 
-	luaopen_base	(LSVM); 
-	luaopen_table	(LSVM);
-	luaopen_string	(LSVM);
-	luaopen_math	(LSVM);
-	luaopen_jit		(LSVM);
+	luaopen_base(LSVM);
+	luaopen_table(LSVM);
+	luaopen_string(LSVM);
+	luaopen_math(LSVM);
+	luaopen_jit(LSVM);
 
-	luabind::open						(LSVM);
+		luabind::open(LSVM);
+
 #if !XRAY_EXCEPTIONS
-	if (0==luabind::get_error_callback())
-		luabind::set_error_callback		(LuaError);
+		if (0 == luabind::get_error_callback())
+			luabind::set_error_callback(LuaError);
 #endif
+		function(LSVM, "log", LuaLog);
 
-	function		(LSVM, "log",	LuaLog);
+		module(LSVM)
+		[
+				class_<adopt_sampler>("_sampler")
+			.def(constructor<const adopt_sampler&>())
+			.def("texture", &adopt_sampler::_texture, return_reference_to(_1))
+			.def("project", &adopt_sampler::_projective, return_reference_to(_1))
+			.def("clamp", &adopt_sampler::_clamp, return_reference_to(_1))
+			.def("wrap", &adopt_sampler::_wrap, return_reference_to(_1))
+			.def("mirror", &adopt_sampler::_mirror, return_reference_to(_1))
+			.def("f_anisotropic", &adopt_sampler::_f_anisotropic, return_reference_to(_1))
+			.def("f_trilinear", &adopt_sampler::_f_trilinear, return_reference_to(_1))
+			.def("f_bilinear", &adopt_sampler::_f_bilinear, return_reference_to(_1))
+			.def("f_linear", &adopt_sampler::_f_linear, return_reference_to(_1))
+			.def("f_none", &adopt_sampler::_f_none, return_reference_to(_1))
+			.def("fmin_none", &adopt_sampler::_fmin_none, return_reference_to(_1))
+			.def("fmin_point", &adopt_sampler::_fmin_point, return_reference_to(_1))
+			.def("fmin_linear", &adopt_sampler::_fmin_linear, return_reference_to(_1))
+			.def("fmin_aniso", &adopt_sampler::_fmin_aniso, return_reference_to(_1))
+			.def("fmip_none", &adopt_sampler::_fmip_none, return_reference_to(_1))
+			.def("fmip_point", &adopt_sampler::_fmip_point, return_reference_to(_1))
+			.def("fmip_linear", &adopt_sampler::_fmip_linear, return_reference_to(_1))
+			.def("fmag_none", &adopt_sampler::_fmag_none, return_reference_to(_1))
+			.def("fmag_point", &adopt_sampler::_fmag_point, return_reference_to(_1))
+			.def("fmag_linear", &adopt_sampler::_fmag_linear, return_reference_to(_1)),
 
-	module			(LSVM)
-	[
-		class_<adopt_sampler>("_sampler")
-			.def(								constructor<const adopt_sampler&>())
-			.def("texture",						&adopt_sampler::_texture		,return_reference_to(_1))
-			.def("project",						&adopt_sampler::_projective		,return_reference_to(_1))
-			.def("clamp",						&adopt_sampler::_clamp			,return_reference_to(_1))
-			.def("wrap",						&adopt_sampler::_wrap			,return_reference_to(_1))
-			.def("mirror",						&adopt_sampler::_mirror			,return_reference_to(_1))
-			.def("f_anisotropic",				&adopt_sampler::_f_anisotropic	,return_reference_to(_1))
-			.def("f_trilinear",					&adopt_sampler::_f_trilinear	,return_reference_to(_1))
-			.def("f_bilinear",					&adopt_sampler::_f_bilinear		,return_reference_to(_1))
-			.def("f_linear",					&adopt_sampler::_f_linear		,return_reference_to(_1))
-			.def("f_none",						&adopt_sampler::_f_none			,return_reference_to(_1))
-			.def("fmin_none",					&adopt_sampler::_fmin_none		,return_reference_to(_1))
-			.def("fmin_point",					&adopt_sampler::_fmin_point		,return_reference_to(_1))
-			.def("fmin_linear",					&adopt_sampler::_fmin_linear	,return_reference_to(_1))
-			.def("fmin_aniso",					&adopt_sampler::_fmin_aniso		,return_reference_to(_1))
-			.def("fmip_none",					&adopt_sampler::_fmip_none		,return_reference_to(_1))
-			.def("fmip_point",					&adopt_sampler::_fmip_point		,return_reference_to(_1))
-			.def("fmip_linear",					&adopt_sampler::_fmip_linear	,return_reference_to(_1))
-			.def("fmag_none",					&adopt_sampler::_fmag_none		,return_reference_to(_1))
-			.def("fmag_point",					&adopt_sampler::_fmag_point		,return_reference_to(_1))
-			.def("fmag_linear",					&adopt_sampler::_fmag_linear	,return_reference_to(_1)),
+			class_<adopt_compiler>("_compiler")
+			.def(constructor<const adopt_compiler&>())
+			.def("begin", &adopt_compiler::_pass, return_reference_to(_1))
+			.def("sorting", &adopt_compiler::_options, return_reference_to(_1))
+			.def("emissive", &adopt_compiler::_o_emissive, return_reference_to(_1))
+			.def("distort", &adopt_compiler::_o_distort, return_reference_to(_1))
+			.def("wmark", &adopt_compiler::_o_wmark, return_reference_to(_1))
+			.def("fog", &adopt_compiler::_fog, return_reference_to(_1))
+			.def("zb", &adopt_compiler::_ZB, return_reference_to(_1))
+			.def("blend", &adopt_compiler::_blend, return_reference_to(_1))
+			.def("aref", &adopt_compiler::_aref, return_reference_to(_1))
+			.def("color_write_enable", &adopt_compiler::_color_write_enable, return_reference_to(_1))
+			.def("sampler", &adopt_compiler::_sampler),	// returns sampler-object
 
-		class_<adopt_compiler>("_compiler")
-			.def(								constructor<const adopt_compiler&>())
-			.def("begin",						&adopt_compiler::_pass			,return_reference_to(_1))
-			.def("sorting",						&adopt_compiler::_options		,return_reference_to(_1))
-			.def("emissive",					&adopt_compiler::_o_emissive	,return_reference_to(_1))
-			.def("distort",						&adopt_compiler::_o_distort		,return_reference_to(_1))
-			.def("wmark",						&adopt_compiler::_o_wmark		,return_reference_to(_1))
-			.def("fog",							&adopt_compiler::_fog			,return_reference_to(_1))
-			.def("zb",							&adopt_compiler::_ZB			,return_reference_to(_1))
-			.def("blend",						&adopt_compiler::_blend			,return_reference_to(_1))
-			.def("aref",						&adopt_compiler::_aref			,return_reference_to(_1))
-			.def("color_write_enable",			&adopt_compiler::_color_write_enable,return_reference_to(_1))
-			.def("sampler",						&adopt_compiler::_sampler		),	// returns sampler-object
-
-		class_<adopt_blend>("blend")
+			class_<adopt_blend>("blend")
 			.enum_("blend")
 			[
-				value("zero",					int(D3DBLEND_ZERO)),
-				value("one",					int(D3DBLEND_ONE)),
-				value("srccolor",				int(D3DBLEND_SRCCOLOR)),
-				value("invsrccolor",			int(D3DBLEND_INVSRCCOLOR)),
-				value("srcalpha",				int(D3DBLEND_SRCALPHA)),
-				value("invsrcalpha",			int(D3DBLEND_INVSRCALPHA)),
-				value("destalpha",				int(D3DBLEND_DESTALPHA)),
-				value("invdestalpha",			int(D3DBLEND_INVDESTALPHA)),
-				value("destcolor",				int(D3DBLEND_DESTCOLOR)),
-				value("invdestcolor",			int(D3DBLEND_INVDESTCOLOR)),
-				value("srcalphasat",			int(D3DBLEND_SRCALPHASAT))
+				value("zero", int(D3DBLEND_ZERO)),
+				value("one", int(D3DBLEND_ONE)),
+				value("srccolor", int(D3DBLEND_SRCCOLOR)),
+				value("invsrccolor", int(D3DBLEND_INVSRCCOLOR)),
+				value("srcalpha", int(D3DBLEND_SRCALPHA)),
+				value("invsrcalpha", int(D3DBLEND_INVSRCALPHA)),
+				value("destalpha", int(D3DBLEND_DESTALPHA)),
+				value("invdestalpha", int(D3DBLEND_INVDESTALPHA)),
+				value("destcolor", int(D3DBLEND_DESTCOLOR)),
+				value("invdestcolor", int(D3DBLEND_INVDESTCOLOR)),
+				value("srcalphasat", int(D3DBLEND_SRCALPHASAT))
 			]
-	];
+		];
 
-	// load shaders
-	xr_vector<char*>*	folder			= FS.file_list_open	("$game_shaders$",::Render->getShaderPath(),FS_ListFiles|FS_RootOnly);
-	VERIFY								(folder);
-	for (u32 it=0; it<folder->size(); it++)	{
-		string_path						namesp,fn;
-		strcpy_s							(namesp,(*folder)[it]);
-		if	(0==strext(namesp) || 0!=xr_strcmp(strext(namesp),".s"))	continue;
-		*strext	(namesp)=0;
-		if		(0==namesp[0])			strcpy_s	(namesp,"_G");
-		strconcat						(sizeof(fn),fn,::Render->getShaderPath(),(*folder)[it]);
-		FS.update_path					(fn,"$game_shaders$",fn);
-		try {
-			Script::bfLoadFileIntoNamespace	(LSVM,fn,namesp,true);
-		} catch (...)
-		{
-			Log(lua_tostring(LSVM,-1));
+		// load shaders
+		xr_vector<char*>*	folder = FS.file_list_open("$game_shaders$", ::Render->getShaderPath(), FS_ListFiles | FS_RootOnly);
+		VERIFY(folder);
+		for (u32 it = 0; it<folder->size(); it++) {
+			string_path						namesp, fn;
+			strcpy_s(namesp, (*folder)[it]);
+			if (0 == strext(namesp) || 0 != xr_strcmp(strext(namesp), ".s"))	continue;
+			*strext(namesp) = 0;
+			if (0 == namesp[0])			strcpy_s(namesp, "_G");
+			strconcat(sizeof(fn), fn, ::Render->getShaderPath(), (*folder)[it]);
+			FS.update_path(fn, "$game_shaders$", fn);
+			try {
+				Script::bfLoadFileIntoNamespace(LSVM, fn, namesp, true);
+			}
+			catch (...)
+			{
+				Log(lua_tostring(LSVM, -1));
+			}
 		}
-	}
-	FS.file_list_close			(folder);
+		FS.file_list_close(folder);
 }
 
 void	CResourceManager::LS_Unload			()

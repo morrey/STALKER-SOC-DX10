@@ -6,7 +6,6 @@
 #include "Physics.h"
 #include "xrserver_objects_alife.h"
 #include "PHElement.h"
-#include "ai_sounds.h"
 #include "../xrRender/Kinematics.h"
 #include "../xrRender/KinematicsAnimated.h"
 #include "game_object_space.h"
@@ -279,8 +278,8 @@ void CHangingLamp::TurnOff()
 		K->LL_SetBoneVisible(light_bone, FALSE, TRUE);
 		VERIFY2(K->LL_GetBonesVisible() != 0, make_string("can not Turn Off lamp: %s, visual %s - because all bones become invisible", cNameVisual().c_str(), cName().c_str()));
 	}
-	if (!PPhysicsShell())//if we have physiccs_shell it will call processing deactivate when disable
-		processing_deactivate();
+	//if (!PPhysicsShell())//if we have physiccs_shell it will call processing deactivate when disable
+	processing_deactivate();
 
 }
 

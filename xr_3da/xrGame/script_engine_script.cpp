@@ -11,6 +11,9 @@
 #include "ai_space.h"
 #include "script_debugger.h"
 //#include <ostream>
+//#include "script_additional_libs.h"
+#include "xr_level_controller.h"
+#include "../x_ray.h"
 
 using namespace luabind;
 
@@ -179,6 +182,8 @@ ICF	u32	script_time_global	()	{ return Device.dwTimeGlobal; }
 #else
 ICF	u32	script_time_global	()	{ return 0; }
 #endif
+extern int get_action_dik(EGameActions _action_id);
+CApplication *get_application() { return pApp; }
 
 #pragma optimize("s",on)
 void CScriptEngine::script_register(lua_State *L)
@@ -189,10 +194,10 @@ void CScriptEngine::script_register(lua_State *L)
 			.def(constructor<profile_timer_script&>())
 			.def(const_self + profile_timer_script())
 			.def(const_self < profile_timer_script())
-//			.def(tostring(self))
-			.def("start",&profile_timer_script::start)
-			.def("stop",&profile_timer_script::stop)
-			.def("time",&profile_timer_script::time)
+			//			.def(tostring(self))
+			.def("start", &profile_timer_script::start)
+			.def("stop", &profile_timer_script::stop)
+			.def("time", &profile_timer_script::time)
 	];
 
 	function	(L,	"log",							LuaLog);
@@ -207,6 +212,7 @@ void CScriptEngine::script_register(lua_State *L)
 	function	(L,	"bit_not",						bit_not);
 	function	(L, "user_name",					user_name);
 	function	(L, "time_global",					script_time_global);
+	function	(L, "bind_to_dik",					get_action_dik);
 #ifdef XRGAME_EXPORTS
 	function	(L,	"device",						get_device);
 #endif

@@ -189,10 +189,11 @@ namespace CDB
 	class XRCDB_API CollectorPacked : public non_copyable {
 		typedef xr_vector<u32>		DWORDList;
 		typedef DWORDList::iterator	DWORDIt;
-
-		xr_vector<Fvector>	verts;
+	
+	private:
+		xr_vector<Fvector>			verts;
 		xr_vector<TRI>		faces;
-
+		xr_vector<u32>		flags;
 		Fvector				VMmin, VMscale;
 		DWORDList			VM		[clpMX+1][clpMY+1][clpMZ+1];
 		Fvector				VMeps;
@@ -206,13 +207,16 @@ namespace CDB
 		//			verts
 		//		}
 
-		void				add_face	( const Fvector& v0, const Fvector& v1, const Fvector& v2, u16 material, u16 sector );
-		void				add_face_D	( const Fvector& v0, const Fvector& v1, const Fvector& v2, u32 dummy );
-		xr_vector<Fvector>& getV_Vec()	{ return verts;				}
-		Fvector*			getV()		{ return &*verts.begin();	}
-		size_t				getVS()		{ return verts.size();		}
-		TRI*				getT()		{ return &*faces.begin();	}
-		size_t				getTS()		{ return faces.size();		}
+		void				add_face	( const Fvector& v0, const Fvector& v1, const Fvector& v2, u16 material, u16 sector, u32 flags );
+		void				add_face_D	( const Fvector& v0, const Fvector& v1, const Fvector& v2, u32 dummy , u32 flags );
+
+		xr_vector<Fvector>& getV_Vec()			{ return verts;				}
+		Fvector*			getV()				{ return &*verts.begin();	}
+		size_t				getVS()				{ return verts.size();		}
+		TRI*				getT()				{ return &*faces.begin();	}
+		u32					getfFlags(u32 index){ return flags[index];		}	
+IC		TRI&				getT(u32 index)		{ return faces[index];		}
+		size_t				getTS()				{ return faces.size();		}
 		void				clear();
 	};
 #pragma warning(pop)

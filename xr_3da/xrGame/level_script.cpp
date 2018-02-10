@@ -85,22 +85,32 @@ CScriptGameObject *get_object_by_id(u32 id)
 	return pGameObject->lua_game_object();
 }
 
-LPCSTR get_weather	()
+LPCSTR get_weather()
 {
 	return			(*g_pGamePersistent->Environment().GetWeather());
 }
 
-void set_weather	(LPCSTR weather_name, bool forced)
+void set_weather(LPCSTR weather_name, bool forced)
 {
-	return			(g_pGamePersistent->Environment().SetWeather(weather_name,forced));
+#ifdef INGAME_EDITOR
+	if (!Device.editor())
+#endif // #ifdef INGAME_EDITOR
+		g_pGamePersistent->Environment().SetWeather(weather_name, forced);
 }
 
-bool set_weather_fx	(LPCSTR weather_name)
+bool set_weather_fx(LPCSTR weather_name)
 {
-	return			(g_pGamePersistent->Environment().SetWeatherFX(weather_name));
+#ifdef INGAME_EDITOR
+	if (!Device.editor())
+#endif // #ifdef INGAME_EDITOR
+		return		(g_pGamePersistent->Environment().SetWeatherFX(weather_name));
+
+#ifdef INGAME_EDITOR
+	return			(false);
+#endif // #ifdef INGAME_EDITOR
 }
 
-bool is_wfx_playing	()
+bool is_wfx_playing()
 {
 	return			(g_pGamePersistent->Environment().IsWFXPlaying());
 }
@@ -110,8 +120,14 @@ void set_time_factor(float time_factor)
 	if (!OnServer())
 		return;
 
+#ifdef INGAME_EDITOR
+	if (Device.editor())
+		return;
+#endif // #ifdef INGAME_EDITOR
+
 	Level().Server->game->SetGameTimeFactor(time_factor);
 }
+
 
 float get_time_factor()
 {

@@ -18,10 +18,9 @@
 #pragma warning(disable:4267)
 
 extern "C" {
-	#include <lua.h>
-	#include <lualib.h>
-	#include <lauxlib.h>
-	#include <luajit.h>
+#include <lua/lua.h>
+#include <lua/lualib.h>
+#include <lua/lauxlib.h>
 };
 
 #include <luabind/luabind.hpp>

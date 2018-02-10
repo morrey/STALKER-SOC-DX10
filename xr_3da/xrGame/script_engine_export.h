@@ -33,6 +33,7 @@
 #	include "script_sound.h"
 #	include "script_particles.h"
 #	include "script_binder_object.h"
+#   include "script_vars_storage.h"
 #	include "action_planner_action.h"
 #	include "action_planner.h"
 #	include "action_base.h"
@@ -81,6 +82,7 @@
 #	include "UI/UIListWnd.h"
 #   include "UI/UIComboBox.h"
 #	include "ui/UIOptionsManagerScript.h"
+#   include "ui/UIMainIngameWnd.h"
 #	include "ui/UIMapInfo.h"
 #	include "ScriptXmlInit.h"
 #	include "script_ui_registrator.h"
@@ -115,6 +117,7 @@
 #	ifdef	DEBUG
 #		include "PHDebug.h"
 #	endif
+
 #	include "hit.h"
 #	include "PHDestroyable.h"
 #	include "car.h"
@@ -134,6 +137,7 @@
 #	include "Scope.h"
 #	include "StalkerOutfit.h"
 #	include "Torch.h"
+//#   include "script_actor.h"
 #	include "WeaponAK74.h"
 #	include "WeaponBinoculars.h"
 #	include "WeaponBM16.h"
@@ -160,4 +164,9 @@
 #	include "ai/trader/ai_trader.h"
 #	include "space_restrictor.h"
 #	include "physicobject.h"
+#	include "inventory_item_object.h"
+#   include "eatable_item_object.h"
+#	include "EffectorZoomInertion.h"
+#	include "Entity.h"
+
 #endif

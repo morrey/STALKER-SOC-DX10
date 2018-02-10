@@ -19,6 +19,7 @@ class CScriptThread;
 	#	define	USE_DEBUGGER
 	#endif
 #endif
+#define USE_DEBUGGER // alpet: полезно при отладке модов и интеграции 1.0007 (!). Позволяет использовать scriptDbgIde, не собирая ТОРМОЗНОЙ отладочный билд.
 
 using namespace ScriptStorage;
 

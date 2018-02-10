@@ -6,7 +6,7 @@
 #include <mmsystem.h>
 #include <objbase.h>
 #include "xrCore.h"
- 
+
 #pragma comment(lib,"winmm.lib")
 
 #ifdef DEBUG
@@ -79,7 +79,8 @@ void xrCore::_initialize	(LPCSTR _ApplicationName, LogCallback cb, BOOL init_fs,
 
 		InitLog				();
 		_initialize_cpu		();
-
+	
+		R_ASSERT(CPU::ID.feature & _CPU_FEATURE_SSE);
 //		Debug._initialize	();
 
 		rtc_initialize		();

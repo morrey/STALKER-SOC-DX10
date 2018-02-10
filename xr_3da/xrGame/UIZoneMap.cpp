@@ -20,6 +20,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 CUIZoneMap::CUIZoneMap()
+	:m_current_map_idx(u8(-1))
 {}
 
 CUIZoneMap::~CUIZoneMap()
@@ -120,4 +121,30 @@ void CUIZoneMap::SetupCurrentMap()
 	wnd_size.x = m_activeMap->BoundRect().width()*zoom_factor;
 	wnd_size.y = m_activeMap->BoundRect().height()*zoom_factor;
 	m_activeMap->SetWndSize(wnd_size);
+}
+
+void CUIZoneMap::OnSectorChanged(int sector)
+{
+	if (!g_pGameLevel->pLevel->section_exist("sub_level_map"))
+		return;
+	u8			map_idx = u8(-1);
+	string64	s_sector;
+	sprintf_s(s_sector, "%d", sector);
+
+	if (!g_pGameLevel->pLevel->line_exist("sub_level_map", s_sector))
+		return;
+
+	map_idx = g_pGameLevel->pLevel->r_u8("sub_level_map", s_sector);
+	if (m_current_map_idx == map_idx)
+		return;
+
+	m_current_map_idx = map_idx;
+
+	string_path sub_texture;
+	sprintf_s(sub_texture, "%s#%d", m_activeMap->m_texture.c_str(), m_current_map_idx);
+
+	if (map_idx == u8(-1))
+		sprintf_s(sub_texture, "%s", m_activeMap->m_texture.c_str());
+
+	m_activeMap->InitTextureEx(sub_texture, m_activeMap->m_shader_name.c_str());
 }

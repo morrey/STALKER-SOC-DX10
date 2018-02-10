@@ -182,7 +182,7 @@ void	CBlender_Screen_SET::Compile	(CBlender_Compile& C)
 	C.r_End				();
 }
 
-#elif defined(USE_DX10) // USE_OGL
+#elif defined(USE_DX10) || defined(USE_DX11) // USE_OGL
 
 void	CBlender_Screen_SET::Compile	(CBlender_Compile& C)
 {

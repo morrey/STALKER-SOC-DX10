@@ -11,6 +11,7 @@
 #include "script_thread.h"
 #include <stdarg.h>
 #include "doug_lea_memory_allocator.h"
+#include "../lua_tools.h"
 
 LPCSTR	file_header_old = "\
 local function script_name() \
@@ -120,29 +121,13 @@ void CScriptStorage::reinit	()
 		Msg					("! ERROR : Cannot initialize script virtual machine!");
 		return;
 	}
-	// initialize lua standard library functions 
-	luaopen_base			(lua()); 
-	luaopen_table			(lua());
-	luaopen_string			(lua());
-	luaopen_math			(lua());
+	
+	luaL_openlibs(m_virtual_machine);	//RvP
 
-#ifdef DEBUG
-	luaopen_debug			(lua());
-//	luaopen_io				(lua());
+#ifdef LUAICP_COMPAT
+ #include "luaicp_attach.inc" // added by alpet 05.07.14
 #endif
-
-#ifdef USE_JIT
-	if (strstr(Core.Params,"-nojit")) {
-//		luaopen_jit			(lua());
-//		luaopen_coco		(lua());
-//		luaJIT_setmode		(lua(),2,LUAJIT_MODE_DEBUG);
-	}
-	else {
-		luaopen_jit			(lua());
-		luaopen_coco		(lua());
-	}
-#endif
-
+	
 	if (strstr(Core.Params,"-_g"))
 		file_header			= file_header_new;
 	else
@@ -341,9 +326,9 @@ bool CScriptStorage::load_buffer	(lua_State *L, LPCSTR caBuffer, size_t tSize, L
 	}
 
 	if (l_iErrorCode) {
-#ifdef DEBUG
+// #ifdef DEBUG
 		print_output(L,caScriptName,l_iErrorCode);
-#endif
+// #endif
 		return			(false);
 	}
 	return				(true);
@@ -371,14 +356,24 @@ bool CScriptStorage::do_file	(LPCSTR caScriptName, LPCSTR caNameSpaceName)
 	FS.r_close		(l_tpFileReader);
 
 	int errFuncId = -1;
+#ifdef LUAICP_COMPAT2 // exception dangerous
+	lua_getglobal(lua(), "AtPanicHandler");
+	if ( lua_isfunction( lua(), -1) )
+		errFuncId = lua_gettop(lua());
+	else
+	    lua_pop(lua(), 1);
+#endif
+
 #ifdef USE_DEBUGGER
-	if( ai().script_engine().debugger() )
-	errFuncId = ai().script_engine().debugger()->PrepareLua(lua());
+	if( ai().script_engine().debugger() && errFuncId < 0 )
+	    errFuncId = ai().script_engine().debugger()->PrepareLua(lua());
 #endif
 	if (0)	//.
 	{
-	    for (int i=0; lua_type(lua(), -i-1); i++)
-            Msg	("%2d : %s",-i-1,lua_typename(lua(), lua_type(lua(), -i-1)));
+		for (int i = 0; lua_type(lua(), -i - 1); i++)
+		{
+			Msg("%2d : %s", -i - 1, lua_typename(lua(), lua_type(lua(), -i - 1)));			
+		}
 	}
 
 	// because that's the first and the only call of the main chunk - there is no point to compile it
@@ -391,7 +386,9 @@ bool CScriptStorage::do_file	(LPCSTR caScriptName, LPCSTR caNameSpaceName)
 		ai().script_engine().debugger()->UnPrepareLua(lua(),errFuncId);
 #endif
 	if (l_iErrorCode) {
-
+#ifdef LUAICP_COMPAT
+		print_output(lua(), caScriptName, l_iErrorCode);
+#endif
 #ifdef DEBUG
 		print_output(lua(),caScriptName,l_iErrorCode);
 #endif
@@ -439,10 +436,12 @@ bool CScriptStorage::namespace_loaded(LPCSTR N, bool remove_from_stack)
 		else 
 			if (!lua_istable(lua(),-1)) { 
 //				lua_settop	(lua(),0);
+				Msg("!ERROR: in stack value type = %s", lua_typename(lua(), -1));
 				VERIFY		(lua_gettop(lua()) >= 1);
 				lua_pop		(lua(),1); 
 				VERIFY		(start == lua_gettop(lua()));
-				FATAL		(" Error : the namespace name is already being used by the non-table object!\n");
+				// FATAL		(" Error : the namespace name is already being used by the non-table object!\n");				
+				Debug.fatal		(DEBUG_INFO, " Error : the namespace name %s is already being used by the non-table object!\n", S);
 				return		(false); 
 			} 
 			lua_remove		(lua(),-2); 
@@ -513,8 +512,9 @@ luabind::object CScriptStorage::name_space(LPCSTR namespace_name)
 
 bool CScriptStorage::print_output(lua_State *L, LPCSTR caScriptFileName, int iErorCode)
 {
-	if (iErorCode)
-		print_error		(L,iErorCode);
+	if (iErorCode)	
+		print_error(L, iErorCode);		
+	
 
 	if (!lua_isstring(L,-1))
 		return			(false);
@@ -532,8 +532,27 @@ bool CScriptStorage::print_output(lua_State *L, LPCSTR caScriptFileName, int iEr
 	else {
 		if (!iErorCode)
 			script_log	(ScriptStorage::eLuaMessageTypeInfo,"Output from %s",caScriptFileName);
+
 		script_log		(iErorCode ? ScriptStorage::eLuaMessageTypeError : ScriptStorage::eLuaMessageTypeMessage,"%s",S);
 #ifdef USE_DEBUGGER
+
+		if (iErorCode)
+		{
+			if (strstr(S, "no overload of  'net_packet:r_vec3'"))  // при загрузке серверных объектов выполн€ютс€ их кор€вые скрипты с тыщей таких ошибок :(
+				 return (true);
+			
+			Msg("!LUA_ERROR: %s", S);			
+#ifdef LUAICP_COMPAT
+			lua_getglobal(L, "DebugDumpAll");
+			lua_pcall(L, 0, 0, -1);
+#else
+			LPCSTR traceback = get_lua_traceback(L, 0);
+			Msg("! %s", caScriptFileName, iErorCode, traceback);
+#endif 
+
+		}
+
+
 		if (ai().script_engine().debugger() && ai().script_engine().debugger()->Active()) {
 			ai().script_engine().debugger()->Write		(S);
 			ai().script_engine().debugger()->ErrorBreak	();

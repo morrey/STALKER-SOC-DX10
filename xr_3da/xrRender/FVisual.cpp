@@ -135,7 +135,7 @@ void Fvisual::Load		(const char* N, IReader *data, u32 dwFlags)
 #if defined(USE_OGL)
 			VERIFY				(NULL==p_rm_Vertices);
 								glBufferUtils::CreateVertexBuffer(&p_rm_Vertices, data->pointer(), vCount*vStride);
-#elif defined(USE_DX10) // USE_OGL
+#elif defined(USE_DX10) || defined(USE_DX11) // USE_OGL
 			VERIFY				(NULL==p_rm_Vertices);
 			R_CHK				(dx10BufferUtils::CreateVertexBuffer(&p_rm_Vertices, data->pointer(), vCount*vStride));
 #else	//	USE_DX10
@@ -175,7 +175,7 @@ void Fvisual::Load		(const char* N, IReader *data, u32 dwFlags)
 #if defined(USE_OGL)
 			VERIFY				(NULL==p_rm_Indices);
 			glBufferUtils::CreateIndexBuffer(&p_rm_Indices, data->pointer(), iCount*2);
-#elif defined(USE_DX10) // USE_OGL
+#elif defined(USE_DX10) || defined(USE_DX11) // USE_OGL
 			//BOOL	bSoft		= HW.Caps.geometry.bSoftware || (dwFlags&VLOAD_FORCESOFTWARE);
 			//u32		dwUsage		= /*D3DUSAGE_WRITEONLY |*/ (bSoft?D3DUSAGE_SOFTWAREPROCESSING:0);	// indices are read in model-wallmarks code
 			//BYTE*	bytes		= 0;

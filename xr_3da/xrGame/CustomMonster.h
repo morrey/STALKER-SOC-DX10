@@ -39,7 +39,9 @@ private:
 
 private:
 	CMemoryManager		*m_memory_manager;
+public:
 	CMovementManager	*m_movement_manager;
+private:
 	CSoundPlayer		*m_sound_player;
 
 private:

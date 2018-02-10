@@ -82,6 +82,7 @@ void	MODEL::build			(Fvector* V, int Vcnt, TRI* T, int Tcnt, build_callback* bc,
 	if(!strstr(Core.Params, "-mt_cdb"))
 	{
 		build_internal				(V,Vcnt,T,Tcnt,bc,bcp);
+		status						= S_READY;
 	}else
 	{
 		BTHREAD_params				P = { this, V, Vcnt, T, Tcnt, bc, bcp };
@@ -135,7 +136,7 @@ void	MODEL::build_internal	(Fvector* V, int Vcnt, TRI* T, int Tcnt, build_callba
 	OPCC.Quantized	= false;
 	// if (Memory.debug_mode) OPCC.KeepOriginal = true;
 
-	tree			= xr_new<OPCODE_Model> ();
+	tree			= new OPCODE_Model();
 	if (!tree->Build(OPCC)) {
 		xr_free		(verts);
 		xr_free		(tris);

@@ -284,7 +284,7 @@
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <CompileAs>Default</CompileAs>
-      <AdditionalIncludeDirectories>$(SolutionDir)xrCore\;$(SolutionDir)third-party\luabind-custom\;$(SolutionDir)xrLua\src;$(SolutionDir)third-party\boost;$(DXSDK_DIR)Include;$(SolutionDir)third-party\libtheora\include;$(SolutionDir)third-party\libogg\include;$(SolutionDir)third-party\</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)xrCore\;$(SolutionDir)third-party\boost;$(DXSDK_DIR)Include;$(SolutionDir)third-party\libtheora\include;$(SolutionDir)third-party\libogg\include;$(SolutionDir)third-party\;$(SolutionDir)\luajit\src;$(SolutionDir)Luabind\</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <AdditionalOptions>/Gw %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
@@ -294,7 +294,7 @@
     </ResourceCompile>
     <Link>
       <AdditionalOptions>/MACHINE:I386  %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalDependencies>msacm32.lib;vfw32.lib;libogg.lib;libtheora.lib;oalib.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>msacm32.lib;vfw32.lib;libogg.lib;libtheora.lib;oalib.lib;luabind.lib;luajit.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <IgnoreSpecificDefaultLibraries>libcmt;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -546,6 +546,7 @@
     <ClInclude Include="LightAnimLibrary.h" />
     <ClInclude Include="line_editor.h" />
     <ClInclude Include="line_edit_control.h" />
+    <ClInclude Include="lua_tools.h" />
     <ClInclude Include="MbHelpers.h" />
     <ClInclude Include="motion.h" />
     <ClInclude Include="mp_logging.h" />
@@ -714,6 +715,7 @@
     <ClCompile Include="LightAnimLibrary.cpp" />
     <ClCompile Include="line_editor.cpp" />
     <ClCompile Include="line_edit_control.cpp" />
+    <ClCompile Include="lua_tools.cpp" />
     <ClCompile Include="mailSlot.cpp" />
     <ClCompile Include="MbHelpers.cpp" />
     <ClCompile Include="motion.cpp" />
@@ -757,6 +759,7 @@
     <ClCompile Include="xr_input_xinput.cpp" />
     <ClCompile Include="XR_IOConsole.cpp" />
     <ClCompile Include="XR_IOConsole_callback.cpp" />
+    <ClCompile Include="XR_IOConsole_control.cpp" />
     <ClCompile Include="XR_IOConsole_get.cpp" />
     <ClCompile Include="xr_ioc_cmd.cpp" />
     <ClCompile Include="xr_object.cpp" />
@@ -789,10 +792,6 @@
     </ProjectReference>
     <ProjectReference Include="..\xrCore\xrCore.vcxproj">
       <Project>{a0f7d1fb-59a7-4717-a7e4-96f37e91998e}</Project>
-      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-    </ProjectReference>
-    <ProjectReference Include="..\xrLua\xrLua.vcxproj">
-      <Project>{9ace5473-6d68-4b96-ac42-b39eaba0fe1f}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
     <ProjectReference Include="..\xrParticles\xrParticles.vcxproj">

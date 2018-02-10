@@ -61,6 +61,7 @@ protected:
 	Frect				UIWeaponIcon_rect;
 public:
 	CUIStatic*			GetPDAOnline() { return &UIPdaOnline; };
+	void				OnSectorChanged(int sector);
 protected:
 
 

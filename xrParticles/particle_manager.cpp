@@ -119,8 +119,11 @@ void CParticleManager::Update(int effect_id, int alist_id, float dt)
     ParticleEffect* pe	= GetEffectPtr(effect_id);
     ParticleActions* pa	= GetActionListPtr(alist_id);
 	// Step through all the actions in the action list.
-	for(PAVecIt it=pa->begin(); it!=pa->end(); it++)
-    	(*it)->Execute	(pe,dt);
+	for (PAVecIt it = pa->begin(); it != pa->end(); it++)
+	{
+		PAPI::ParticleAction *pa = (*it);
+		pa->Execute(pe, dt);		
+	}
 }
 void CParticleManager::Render(int effect_id)
 {

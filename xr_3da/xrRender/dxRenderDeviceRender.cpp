@@ -342,7 +342,8 @@ void dxRenderDeviceRender::End()
 	DoAsyncScreenshot();
 
 #ifdef	USE_DX10
-	HW.m_pSwapChain->Present( 0, 0 );
+	// VSync Fix by SkyLoader
+	HW.m_pSwapChain->Present(psDeviceFlags.test(rsVSync) ? 1 : 0, 0);
 #else	//	USE_DX10
 	CHK_DX				(HW.pDevice->EndScene());
 
@@ -350,6 +351,7 @@ void dxRenderDeviceRender::End()
 #endif	//	USE_DX10
 	//HRESULT _hr		= HW.pDevice->Present( NULL, NULL, NULL, NULL );
 	//if				(D3DERR_DEVICELOST==_hr)	return;			// we will handle this later
+
 }
 
 void dxRenderDeviceRender::ResourcesDestroyNecessaryTextures()

@@ -45,11 +45,15 @@
 	.def(#c, (d (a::*)(e))(&a::c), (d (*)(b*,f))(&b::c##_static))
 
 #ifdef DEBUG
+#	ifdef LUABIND_NO_EXCEPTIONS 
+#	define CAST_FAILED(v_func_name,ret_type)
+#	else
 #	define CAST_FAILED(v_func_name,ret_type) \
 		catch(luabind::cast_failed exception) {										\
 			ai().script_engine().script_log (ScriptStorage::eLuaMessageTypeError,"SCRIPT RUNTIME ERROR : luabind::cast_failed in function %s (%s)!",#v_func_name,#ret_type);\
 			return ((ret_type)(0));													\
 		}
+#	endif
 #else
 #	define CAST_FAILED(v_func_name,ret_type)
 #endif

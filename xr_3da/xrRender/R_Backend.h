@@ -90,7 +90,7 @@ private:
 #endif // USE_OGL
 
 	// Vertices/Indices/etc
-#if defined(USE_DX10) || defined(USE_OGL)
+#if defined(USE_DX10) || defined(USE_DX11) || defined(USE_OGL)
 	SDeclaration*					decl;
 #else	//	USE_DX10 || USE_OGL
 	IDirect3DVertexDeclaration9*	decl;
@@ -249,7 +249,7 @@ public:
 	ICF	void						set_States			(SState* _state);
 	ICF	void						set_States			(ref_state& _state)					{ set_States(&*_state); }
 
-#if defined(USE_DX10) || defined(USE_OGL)
+#if defined(USE_DX10) || defined(USE_DX11) || defined(USE_OGL)
 	ICF  void						set_Format			(SDeclaration* _decl);
 #else	//	USE_DX10 || USE_OGL
 	ICF  void						set_Format			(IDirect3DVertexDeclaration9* _decl);
@@ -313,7 +313,7 @@ public:
 	ICF	void						set_ca				(R_constant* C, u32 e, const Fmatrix& A)							{ if (C)		constants.seta(C,e,A);				}
 	ICF	void						set_ca				(R_constant* C, u32 e, const Fvector4& A)							{ if (C)		constants.seta(C,e,A);				}
 	ICF	void						set_ca				(R_constant* C, u32 e, float x, float y, float z, float w)			{ if (C)		constants.seta(C,e,x,y,z,w);		}
-#if defined(USE_DX10) || defined(USE_OGL)
+#if defined(USE_DX10) || defined(USE_DX11) || defined(USE_OGL)
 	ICF	void						set_c				(R_constant* C, float A)											{ if (C)		constants.set(C,A);					}
 	ICF	void						set_c				(R_constant* C, int A)												{ if (C)		constants.set(C,A);					}
 #endif	//	USE_DX10 || USE_OGL
@@ -326,7 +326,7 @@ public:
 	ICF	void						set_ca				(LPCSTR n, u32 e, const Fmatrix& A)									{ if(ctable)	set_ca	(&*ctable->get(n),e,A);		}
 	ICF	void						set_ca				(LPCSTR n, u32 e, const Fvector4& A)								{ if(ctable)	set_ca	(&*ctable->get(n),e,A);		}
 	ICF	void						set_ca				(LPCSTR n, u32 e, float x, float y, float z, float w)				{ if(ctable)	set_ca	(&*ctable->get(n),e,x,y,z,w);}
-#if defined(USE_DX10) || defined(USE_OGL)
+#if defined(USE_DX10) || defined(USE_DX11) || defined(USE_OGL)
 	ICF	void						set_c				(LPCSTR n, float A)													{ if(ctable)	set_c	(&*ctable->get(n),A);		}
 	ICF	void						set_c				(LPCSTR n, int A)													{ if(ctable)	set_c	(&*ctable->get(n),A);		}
 #endif	//	USE_DX10 || USE_OGL
@@ -338,7 +338,7 @@ public:
 	ICF	void						set_ca				(shared_str& n, u32 e, const Fmatrix& A)							{ if(ctable)	set_ca	(&*ctable->get(n),e,A);		}
 	ICF	void						set_ca				(shared_str& n, u32 e, const Fvector4& A)							{ if(ctable)	set_ca	(&*ctable->get(n),e,A);		}
 	ICF	void						set_ca				(shared_str& n, u32 e, float x, float y, float z, float w)			{ if(ctable)	set_ca	(&*ctable->get(n),e,x,y,z,w);}
-#if defined(USE_DX10) || defined(USE_OGL)
+#if defined(USE_DX10) || defined(USE_DX11) || defined(USE_OGL)
 	ICF	void						set_c				(shared_str& n, float A)											{ if(ctable)	set_c	(&*ctable->get(n),A);		}
 	ICF	void						set_c				(shared_str& n, int A)												{ if(ctable)	set_c	(&*ctable->get(n),A);		}
 #endif	//	USE_DX10 || USE_OGL

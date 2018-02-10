@@ -20,7 +20,8 @@
 #include "../x_ray.h"
 #include "saved_game_wrapper.h"
 #include "string_table.h"
-#include "../igame_persistent.h"
+#include "../IGame_Persistent.h"
+#include "script_vars_storage.h"
 
 using namespace ALife;
 
@@ -56,6 +57,7 @@ void CALifeStorageManager::save	(LPCSTR save_name, bool update_name)
 		spawns().save			(stream);
 		objects().save			(stream);
 		registry().save			(stream);
+		g_ScriptVars.save       (stream);
 
 		source_count			= stream.tell();
 		void					*source_data = stream.pointer();
@@ -110,6 +112,7 @@ void CALifeStorageManager::load	(void *buffer, const u32 &buffer_size, LPCSTR fi
 	}
 
 	registry().load				(source);
+	g_ScriptVars.load           (source);
 
 	can_register_objects		(true);
 
